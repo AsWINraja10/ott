@@ -1,0 +1,298 @@
+{
+  "updatedAt": "2026-11-02T07:58:19.663Z",
+  "source": "NSE & BSE bhavcopy 30 Oct 2026",
+  "nifty": {
+    "index": "NIFTY",
+    "exchange": "NSE",
+    "tradeDate": "2026-10-30",
+    "forDate": "2026-11-02",
+    "expiry": "2026-11-03",
+    "step": 50,
+    "underlying": 23053.1,
+    "scanCenter": 23050,
+    "atm": 23050,
+    "cePdc": 103.9,
+    "pePdc": 127.3,
+    "ceMinusPe": 23.4,
+    "pdcAvg": 115.6,
+    "rounded": 100,
+    "synBase": 23026.6,
+    "wideMult": 2,
+    "short": {
+      "width": 100,
+      "range": 200,
+      "ce": {
+        "strike": 22950,
+        "pdc": 160.45,
+        "iv": 76.6
+      },
+      "pe": {
+        "strike": 23150,
+        "pdc": 185.5,
+        "iv": 123.4
+      }
+    },
+    "wide": {
+      "width": 200,
+      "range": 400,
+      "ce": {
+        "strike": 22850,
+        "pdc": 230.4,
+        "iv": 176.6
+      },
+      "pe": {
+        "strike": 23250,
+        "pdc": 256.75,
+        "iv": 223.4
+      }
+    },
+    "ladder": [
+      {
+        "dist": 0,
+        "tag": "ATM",
+        "range": 0,
+        "ceStrike": 23050,
+        "cePdc": 103.9,
+        "ceIv": -23.4,
+        "peStrike": 23050,
+        "pePdc": 127.3,
+        "peIv": 23.4
+      },
+      {
+        "dist": 50,
+        "tag": "",
+        "range": 100,
+        "ceStrike": 23000,
+        "cePdc": 129.9,
+        "ceIv": 26.6,
+        "peStrike": 23100,
+        "pePdc": 154.6,
+        "peIv": 73.4
+      },
+      {
+        "dist": 100,
+        "tag": "SHORT",
+        "range": 200,
+        "ceStrike": 22950,
+        "cePdc": 160.45,
+        "ceIv": 76.6,
+        "peStrike": 23150,
+        "pePdc": 185.5,
+        "peIv": 123.4
+      },
+      {
+        "dist": 150,
+        "tag": "",
+        "range": 300,
+        "ceStrike": 22900,
+        "cePdc": 192.95,
+        "ceIv": 126.6,
+        "peStrike": 23200,
+        "pePdc": 219.65,
+        "peIv": 173.4
+      },
+      {
+        "dist": 200,
+        "tag": "WIDE",
+        "range": 400,
+        "ceStrike": 22850,
+        "cePdc": 230.4,
+        "ceIv": 176.6,
+        "peStrike": 23250,
+        "pePdc": 256.75,
+        "peIv": 223.4
+      }
+    ],
+    "hl": {
+      "cePdh": 165,
+      "cePdl": 65.55,
+      "pePdh": 232.3,
+      "pePdl": 104.25,
+      "hh": 232.3,
+      "ll": 65.55,
+      "hhFrom": "PE PDH",
+      "llFrom": "CE PDL",
+      "bep": 148.93
+    }
+  },
+  "sensex": {
+    "index": "SENSEX",
+    "exchange": "BSE",
+    "tradeDate": "2026-10-30",
+    "forDate": "2026-11-02",
+    "expiry": "2026-11-05",
+    "step": 100,
+    "underlying": 74459.53,
+    "scanCenter": 74500,
+    "atm": 74400,
+    "cePdc": 567.05,
+    "pePdc": 531.5,
+    "ceMinusPe": 35.55,
+    "pdcAvg": 549.28,
+    "rounded": 500,
+    "synBase": 74435.55,
+    "wideMult": 2,
+    "short": {
+      "width": 500,
+      "range": 1000,
+      "ce": {
+        "strike": 73900,
+        "pdc": 889.1,
+        "iv": 535.55
+      },
+      "pe": {
+        "strike": 74900,
+        "pdc": 788.65,
+        "iv": 464.45
+      }
+    },
+    "wide": {
+      "width": 1000,
+      "range": 2000,
+      "ce": {
+        "strike": 73400,
+        "pdc": 1257.55,
+        "iv": 1035.55
+      },
+      "pe": {
+        "strike": 75400,
+        "pdc": 1129.95,
+        "iv": 964.45
+      }
+    },
+    "ladder": [
+      {
+        "dist": 0,
+        "tag": "ATM",
+        "range": 0,
+        "ceStrike": 74400,
+        "cePdc": 567.05,
+        "ceIv": 35.55,
+        "peStrike": 74400,
+        "pePdc": 531.5,
+        "peIv": -35.55
+      },
+      {
+        "dist": 100,
+        "tag": "",
+        "range": 200,
+        "ceStrike": 74300,
+        "cePdc": 625.9,
+        "ceIv": 135.55,
+        "peStrike": 74500,
+        "pePdc": 575.85,
+        "peIv": 64.45
+      },
+      {
+        "dist": 200,
+        "tag": "",
+        "range": 400,
+        "ceStrike": 74200,
+        "cePdc": 685.85,
+        "ceIv": 235.55,
+        "peStrike": 74600,
+        "pePdc": 624.9,
+        "peIv": 164.45
+      },
+      {
+        "dist": 300,
+        "tag": "",
+        "range": 600,
+        "ceStrike": 74100,
+        "cePdc": 746.45,
+        "ceIv": 335.55,
+        "peStrike": 74700,
+        "pePdc": 675.95,
+        "peIv": 264.45
+      },
+      {
+        "dist": 400,
+        "tag": "",
+        "range": 800,
+        "ceStrike": 74000,
+        "cePdc": 806.8,
+        "ceIv": 435.55,
+        "peStrike": 74800,
+        "pePdc": 729.95,
+        "peIv": 364.45
+      },
+      {
+        "dist": 500,
+        "tag": "SHORT",
+        "range": 1000,
+        "ceStrike": 73900,
+        "cePdc": 889.1,
+        "ceIv": 535.55,
+        "peStrike": 74900,
+        "pePdc": 788.65,
+        "peIv": 464.45
+      },
+      {
+        "dist": 600,
+        "tag": "",
+        "range": 1200,
+        "ceStrike": 73800,
+        "cePdc": 954.1,
+        "ceIv": 635.55,
+        "peStrike": 75000,
+        "pePdc": 853.95,
+        "peIv": 564.45
+      },
+      {
+        "dist": 700,
+        "tag": "",
+        "range": 1400,
+        "ceStrike": 73700,
+        "cePdc": 1032.3,
+        "ceIv": 735.55,
+        "peStrike": 75100,
+        "pePdc": 909.95,
+        "peIv": 664.45
+      },
+      {
+        "dist": 800,
+        "tag": "",
+        "range": 1600,
+        "ceStrike": 73600,
+        "cePdc": 1107.25,
+        "ceIv": 835.55,
+        "peStrike": 75200,
+        "pePdc": 986.9,
+        "peIv": 764.45
+      },
+      {
+        "dist": 900,
+        "tag": "",
+        "range": 1800,
+        "ceStrike": 73500,
+        "cePdc": 1175.15,
+        "ceIv": 935.55,
+        "peStrike": 75300,
+        "pePdc": 1064,
+        "peIv": 864.45
+      },
+      {
+        "dist": 1000,
+        "tag": "WIDE",
+        "range": 2000,
+        "ceStrike": 73400,
+        "cePdc": 1257.55,
+        "ceIv": 1035.55,
+        "peStrike": 75400,
+        "pePdc": 1129.95,
+        "peIv": 964.45
+      }
+    ],
+    "hl": {
+      "cePdh": 807.5,
+      "cePdl": 433.1,
+      "pePdh": 830.05,
+      "pePdl": 449.85,
+      "hh": 830.05,
+      "ll": 433.1,
+      "hhFrom": "PE PDH",
+      "llFrom": "CE PDL",
+      "bep": 631.58
+    }
+  }
+}

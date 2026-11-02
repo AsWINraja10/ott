@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#12355b">
+  <title>Triangle Levels — Option Tricky Trade</title>
+  <style>
+/* Option Tricky Trade — styles for login / dashboard / admin
+   Change these colours to match your main site. */
+:root {
+  --bg: #f5f3ee;
+  --surface: #ffffff;
+  --ink: #14202e;
+  --muted: #5d6874;
+  --line: #e2ddd2;
+  --brand: #12355b;
+  --brand-ink: #ffffff;
+  --accent: #c8952e;
+  --ok: #1d7a4a;
+  --ok-bg: #e5f4ec;
+  --warn: #9a5b00;
+  --warn-bg: #fdf1dc;
+  --bad: #b3261e;
+  --bad-bg: #fbe7e5;
+  --wa: #1fa855;
+  --radius: 12px;
+  --shadow: 0 1px 2px rgba(20, 32, 46, .06), 0 6px 24px rgba(20, 32, 46, .06);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Tamil", sans-serif;
+}
+a { color: var(--brand); }
+h1, h2, h3 { line-height: 1.25; margin: 0 0 .5rem; }
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.2rem; }
+h3 { font-size: 1rem; }
+p { margin: 0 0 .75rem; }
+[hidden] { display: none !important; }
+
+/* ---------- top bar ---------- */
+.topbar {
+  background: var(--brand); color: var(--brand-ink);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left));
+}
+.topbar a { color: var(--brand-ink); text-decoration: none; font-weight: 600; }
+.topbar .right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.topbar .who { font-size: .9rem; opacity: .85; }
+
+/* ---------- layout ---------- */
+.container { max-width: 1040px; margin: 0 auto; padding: 24px 16px 48px; }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px;
+}
+.card.span { grid-column: 1 / -1; }
+.muted { color: var(--muted); }
+.small { font-size: .875rem; }
+
+/* ---------- buttons & forms ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  border-radius: 10px; padding: 10px 16px; font: inherit; font-weight: 600;
+  cursor: pointer; text-decoration: none; min-height: 44px;
+}
+.btn:hover { filter: brightness(.97); }
+.btn.primary { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+.btn.accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn.wa { background: var(--wa); color: #fff; border-color: var(--wa); }
+.btn.danger { color: var(--bad); }
+.btn.sm { padding: 6px 10px; min-height: 34px; font-size: .85rem; }
+.btn.ghost { background: transparent; border-color: rgba(255,255,255,.4); color: inherit; }
+.btn:disabled { opacity: .6; cursor: not-allowed; }
+.btn.block { width: 100%; }
+.link { background: none; border: 0; color: var(--brand); font: inherit; cursor: pointer; padding: 6px 0; text-decoration: underline; }
+
+label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 12px; }
+input, textarea, select {
+  display: block; width: 100%; margin-top: 6px;
+  border: 1px solid var(--line); border-radius: 10px; background: #fff;
+  padding: 10px 12px; font: inherit; color: var(--ink);
+}
+input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+textarea { min-height: 90px; resize: vertical; }
+label.check { display: flex; gap: 10px; align-items: flex-start; font-weight: 500; }
+label.check input { width: auto; margin-top: 4px; }
+.phone { display: flex; margin-top: 6px; }
+.phone span { border: 1px solid var(--line); border-right: 0; border-radius: 10px 0 0 10px; padding: 10px 12px; background: var(--bg); font-weight: 600; }
+.phone input { margin: 0; border-radius: 0 10px 10px 0; }
+
+.msg { min-height: 1.4em; margin: 12px 0 0; font-size: .92rem; }
+.msg.err { color: var(--bad); }
+.msg.ok { color: var(--ok); }
+
+/* ---------- auth page ---------- */
+.auth-wrap { max-width: 440px; margin: 0 auto; padding: 32px 16px 48px; }
+.auth-wrap .brand { display: inline-block; margin-bottom: 16px; font-weight: 700; text-decoration: none; }
+.auth-head { text-align: center; margin-bottom: 16px; }
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--bg); padding: 4px; border-radius: 10px; margin-bottom: 20px; }
+.tabs button { border: 0; background: transparent; padding: 10px; border-radius: 8px; font: inherit; font-weight: 600; color: var(--muted); cursor: pointer; }
+.tabs button.active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.fine { color: var(--muted); font-size: .8rem; text-align: center; margin-top: 20px; }
+
+/* ---------- badges ---------- */
+.badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .8rem; font-weight: 700; white-space: nowrap; }
+.badge.ok { background: var(--ok-bg); color: var(--ok); }
+.badge.warn { background: var(--warn-bg); color: var(--warn); }
+.badge.bad { background: var(--bad-bg); color: var(--bad); }
+.badge.plain { background: var(--bg); color: var(--muted); }
+
+/* ---------- dashboard ---------- */
+.hero { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.notice { background: var(--warn-bg); border: 1px solid #f0d9ae; border-radius: var(--radius); padding: 12px 16px; margin-bottom: 16px; }
+.video { position: relative; padding-top: 56.25%; border-radius: 10px; overflow: hidden; background: #000; margin-top: 8px; }
+.video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.list { list-style: none; margin: 0; padding: 0; }
+.list li { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.list li:last-child { border-bottom: 0; }
+.perks li::before { content: "✓ "; color: var(--ok); font-weight: 700; }
+.hints { max-height: 420px; overflow: auto; }
+.hint { padding: 10px 0; border-bottom: 1px solid var(--line); white-space: pre-wrap; word-wrap: break-word; }
+.hint time { display: block; font-size: .78rem; color: var(--muted); margin-bottom: 2px; }
+.hint:last-child { border-bottom: 0; }
+.live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--bad); margin-right: 6px; animation: pulse 1.6s infinite; }
+@keyframes pulse { 50% { opacity: .3; } }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+
+/* ---------- admin ---------- */
+.stats { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 16px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+.stat b { display: block; font-size: 1.6rem; }
+.toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.toolbar input, .toolbar select { margin: 0; width: auto; flex: 1 1 180px; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+td .row-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+td select { width: auto; margin: 0; padding: 6px 8px; font-size: .85rem; }
+.section-title { margin: 28px 0 12px; }
+
+/* ---------- app install / alerts ---------- */
+.appbar { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 16px; }
+.appbar-in { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.appbar-txt { font-weight: 700; }
+.appbar-act { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.appbar .msg { margin-top: 6px; min-height: 0; }
+.ott-sheet { position: fixed; inset: 0; background: rgba(10, 20, 35, .55); display: flex; align-items: flex-end; justify-content: center; z-index: 50; padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+.ott-sheet-card { background: var(--surface); border-radius: 16px; padding: 20px; width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 10px; }
+.ott-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+.push-toast { position: fixed; left: 50%; transform: translateX(-50%); top: max(12px, env(safe-area-inset-top)); z-index: 60; background: var(--ink); color: #fff; border-radius: 12px; padding: 10px 14px; display: flex; flex-direction: column; max-width: calc(100% - 32px); box-shadow: var(--shadow); }
+
+/* ---------- triangle ---------- */
+.tri-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.seg { display: inline-flex; gap: 4px; background: var(--bg); padding: 4px; border-radius: 10px; }
+.seg button { border: 0; background: transparent; padding: 8px 14px; border-radius: 8px; font: inherit; font-weight: 700; color: var(--muted); cursor: pointer; }
+.seg button[aria-selected="true"] { background: var(--brand); color: var(--brand-ink); }
+.tr-table { min-width: 620px; }
+
+@media (max-width: 640px) {
+  h1 { font-size: 1.35rem; }
+  .topbar .who { display: none; }
+  /* stack the user table into cards on phones */
+  #rows, #rows tr, #rows td, .users-table, .users-table thead { display: block; }
+  .users-table thead { display: none; }
+  #rows tr { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; margin-bottom: 10px; background: var(--surface); }
+  #rows td { border: 0; padding: 4px 0; }
+  td[data-l]::before { content: attr(data-l) ": "; font-weight: 600; color: var(--muted); }
+}
+
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <a href="https://optiontrickytrade.com/">Option Tricky Trade</a>
+  <div class="right"><span class="who" id="clock"></span></div>
+</header>
+
+<main class="container">
+  <!-- One file: styles, triangle code and the latest levels are built in.
+       Works by double-click, Live Server or any web host.
+       If a newer levels.json sits next to this file (on a server), it is used instead
+       and checked again every minute. -->
+  <div class="card">
+    <div class="tri-head">
+      <div>
+        <h2>🔺 Triangle levels</h2>
+        <p class="muted small" id="meta">Loading…</p>
+      </div>
+      <div class="seg" role="tablist" aria-label="Index">
+        <button type="button" role="tab" data-ix="nifty" aria-selected="true">NIFTY</button>
+        <button type="button" role="tab" data-ix="sensex" aria-selected="false">SENSEX</button>
+      </div>
+    </div>
+    <div id="box"></div>
+    <p class="muted small" id="status"></p>
+  </div>
+  <p class="fine">For educational purposes only. Not investment advice.</p>
+</main>
+
+<script>
+/* ---- triangle drawing (same as triangle-view.js) ---- */
+// ============================================================
+//  Option Tricky Trade — Triangle levels view (SVG + tables)
+//  renderTriangle(levels) → HTML string. Used by dashboard.html and admin.html.
+// ============================================================
+
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const f = (v, d = 2) => v == null || !Number.isFinite(+v) ? "—" : (+v).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: d });
+const k = v => v == null ? "—" : (+v).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+
+function fmtIsoDate(s) {
+  if (!s) return "—";
+  const d = new Date(s + "T00:00:00");
+  return isNaN(d) ? s : d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function renderTriangle(L) {
+  if (!L || !L.atm) return `<p class="muted">Levels are not available yet.</p>`;
+
+  // ---------- SVG geometry ----------
+  const W = 680, H = 470, cx = W / 2;
+  const apexY = 78, shortY = 238, wideY = 388, halfBase = 250;
+  const xAt = y => halfBase * (y - apexY) / (wideY - apexY);
+  const sx = xAt(shortY);
+
+  // ladder ticks along both sides
+  const steps = Math.max(1, Math.round(L.wide.width / L.step));
+  let ticks = "";
+  for (let i = 1; i < steps; i++) {
+    const y = apexY + (wideY - apexY) * (i / steps);
+    if (Math.abs(y - shortY) < 2) continue;
+    const dx = xAt(y);
+    ticks += `<line x1="${cx - dx - 6}" y1="${y}" x2="${cx - dx + 6}" y2="${y}" class="tr-tick"/><line x1="${cx + dx - 6}" y1="${y}" x2="${cx + dx + 6}" y2="${y}" class="tr-tick"/>`;
+  }
+
+  const svg = `
+<svg class="tri" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(L.index)} triangle: ATM ${L.atm}, short ${L.short.ce.strike} to ${L.short.pe.strike}, wide ${L.wide.ce.strike} to ${L.wide.pe.strike}">
+  <polygon points="${cx},${apexY} ${cx - halfBase},${wideY} ${cx + halfBase},${wideY}" class="tr-fill"/>
+  <polygon points="${cx},${apexY} ${cx - sx},${shortY} ${cx + sx},${shortY}" class="tr-fill2"/>
+  <line x1="${cx}" y1="${apexY}" x2="${cx - halfBase}" y2="${wideY}" class="tr-ce"/>
+  <line x1="${cx}" y1="${apexY}" x2="${cx + halfBase}" y2="${wideY}" class="tr-pe"/>
+  ${ticks}
+  <line x1="${cx - sx}" y1="${shortY}" x2="${cx + sx}" y2="${shortY}" class="tr-short"/>
+  <line x1="${cx - halfBase}" y1="${wideY}" x2="${cx + halfBase}" y2="${wideY}" class="tr-wide"/>
+  <line x1="${cx}" y1="${apexY + 12}" x2="${cx}" y2="${wideY}" class="tr-axis"/>
+
+  <!-- apex: ATM -->
+  <circle cx="${cx}" cy="${apexY}" r="8" class="tr-dot-atm"/>
+  <text x="${cx}" y="${apexY - 44}" class="tr-t tr-b" text-anchor="middle">ATM ${k(L.atm)}</text>
+  <text x="${cx}" y="${apexY - 22}" class="tr-t tr-s" text-anchor="middle"><tspan class="tr-cec">CE ${f(L.cePdc)}</tspan>  ·  <tspan class="tr-pec">PE ${f(L.pePdc)}</tspan></text>
+
+  <!-- range labels -->
+  <text x="${cx}" y="${shortY - 12}" class="tr-t tr-rng" text-anchor="middle">Short range ${k(L.short.range)} pts</text>
+  <text x="${cx}" y="${shortY + 22}" class="tr-t tr-s tr-m" text-anchor="middle">±${k(L.short.width)}</text>
+  <text x="${cx}" y="${wideY - 12}" class="tr-t tr-rng" text-anchor="middle">Wide range ${k(L.wide.range)} pts</text>
+  <text x="${cx}" y="${wideY + 22}" class="tr-t tr-s tr-m" text-anchor="middle">±${k(L.wide.width)} (×${L.wideMult})</text>
+  <text x="${cx}" y="${(shortY + wideY) / 2 + 8}" class="tr-t tr-xs tr-m" text-anchor="middle">Syn PDC ${f(L.synBase, 1)}</text>
+
+  <!-- short vertices -->
+  <circle cx="${cx - sx}" cy="${shortY}" r="7" class="tr-dot-ce"/>
+  <circle cx="${cx + sx}" cy="${shortY}" r="7" class="tr-dot-pe"/>
+  <text x="${cx - sx - 36}" y="${shortY - 8}" class="tr-t tr-b tr-cec" text-anchor="end">${k(L.short.ce.strike)} CE</text>
+  <text x="${cx - sx - 36}" y="${shortY + 14}" class="tr-t tr-s" text-anchor="end">IV ${f(L.short.ce.iv, 1)}</text>
+  <text x="${cx - sx - 36}" y="${shortY + 34}" class="tr-t tr-xs tr-m" text-anchor="end">PDC ${f(L.short.ce.pdc)}</text>
+  <text x="${cx + sx + 36}" y="${shortY - 8}" class="tr-t tr-b tr-pec">${k(L.short.pe.strike)} PE</text>
+  <text x="${cx + sx + 36}" y="${shortY + 14}" class="tr-t tr-s">IV ${f(L.short.pe.iv, 1)}</text>
+  <text x="${cx + sx + 36}" y="${shortY + 34}" class="tr-t tr-xs tr-m">PDC ${f(L.short.pe.pdc)}</text>
+
+  <!-- wide vertices -->
+  <circle cx="${cx - halfBase}" cy="${wideY}" r="7" class="tr-dot-ce"/>
+  <circle cx="${cx + halfBase}" cy="${wideY}" r="7" class="tr-dot-pe"/>
+  <text x="${cx - halfBase - 4}" y="${wideY + 30}" class="tr-t tr-b tr-cec">${k(L.wide.ce.strike)} CE</text>
+  <text x="${cx - halfBase - 4}" y="${wideY + 52}" class="tr-t tr-s">IV ${f(L.wide.ce.iv, 1)}  ·  <tspan class="tr-m">PDC ${f(L.wide.ce.pdc)}</tspan></text>
+  <text x="${cx + halfBase + 4}" y="${wideY + 30}" class="tr-t tr-b tr-pec" text-anchor="end">${k(L.wide.pe.strike)} PE</text>
+  <text x="${cx + halfBase + 4}" y="${wideY + 52}" class="tr-t tr-s" text-anchor="end">IV ${f(L.wide.pe.iv, 1)}  ·  <tspan class="tr-m">PDC ${f(L.wide.pe.pdc)}</tspan></text>
+</svg>`;
+
+  // ---------- summary chips ----------
+  const chips = `
+<div class="tr-chips">
+  <div><span>ATM</span><b>${k(L.atm)}</b></div>
+  <div><span>CE − PE diff</span><b>${f(L.ceMinusPe)}</b></div>
+  <div><span>PDC Avg</span><b>${f(L.pdcAvg)}</b></div>
+  <div><span>Rounded</span><b>±${k(L.rounded)}</b></div>
+  <div><span>Syn PDC</span><b>${f(L.synBase, 1)}</b></div>
+  <div><span>${esc(L.index)} close</span><b>${f(L.underlying)}</b></div>
+</div>`;
+
+  // ---------- range table ----------
+  const rangeRow = (name, R, cls) => `
+<tr class="${cls}"><th scope="row">${name} <small>±${k(R.width)}</small></th><td class="num">${k(R.range)} pts</td>
+<td class="cec">${k(R.ce.strike)} CE</td><td class="num">${f(R.ce.iv, 1)}</td><td class="num">${f(R.ce.pdc)}</td>
+<td class="pec">${k(R.pe.strike)} PE</td><td class="num">${f(R.pe.iv, 1)}</td><td class="num">${f(R.pe.pdc)}</td></tr>`;
+  const ranges = `
+<div class="tr-tablewrap"><table class="tr-table">
+<thead><tr><th>Range</th><th>Width</th><th>Call strike</th><th>CE IV</th><th>CE PDC</th><th>Put strike</th><th>PE IV</th><th>PE PDC</th></tr></thead>
+<tbody>${rangeRow("Short", L.short, "r-short")}${rangeRow("Wide", L.wide, "r-wide")}</tbody></table></div>`;
+
+  // ---------- ladder ----------
+  const ladder = `
+<details class="tr-ladder"><summary>Strike ladder (ATM → Wide) · ${L.ladder.length} strikes</summary>
+<div class="tr-tablewrap"><table class="tr-table">
+<thead><tr><th>Tag</th><th>Dist ±</th><th>Range</th><th>CE strike</th><th>CE PDC</th><th>CE IV</th><th>PE strike</th><th>PE PDC</th><th>PE IV</th></tr></thead>
+<tbody>${L.ladder.map(r => `<tr class="${r.tag ? "t-" + r.tag.toLowerCase() : ""}"><td><b>${r.tag}</b></td><td class="num">${k(r.dist)}</td><td class="num">${k(r.range)}</td><td class="cec">${k(r.ceStrike)}</td><td class="num">${f(r.cePdc)}</td><td class="num">${f(r.ceIv, 1)}</td><td class="pec">${k(r.peStrike)}</td><td class="num">${f(r.pePdc)}</td><td class="num">${f(r.peIv, 1)}</td></tr>`).join("")}</tbody>
+</table></div></details>`;
+
+  // ---------- ATM high / low ----------
+  const hl = L.hl ? `
+<div class="tr-hl">
+  <div><span>ATM CE PDH / PDL</span><b class="cec">${f(L.hl.cePdh)} / ${f(L.hl.cePdl)}</b></div>
+  <div><span>ATM PE PDH / PDL</span><b class="pec">${f(L.hl.pePdh)} / ${f(L.hl.pePdl)}</b></div>
+  <div><span>Highest High <small>${esc(L.hl.hhFrom)}</small></span><b>${f(L.hl.hh)}</b></div>
+  <div><span>Lowest Low <small>${esc(L.hl.llFrom)}</small></span><b>${f(L.hl.ll)}</b></div>
+  <div><span>HL BEP</span><b>${f(L.hl.bep)}</b></div>
+</div>` : "";
+
+  return `<div class="tr-wrap">${svg}</div>${chips}${ranges}${hl}${ladder}`;
+}
+
+const TRIANGLE_CSS = `
+.tr-wrap{width:100%;max-width:720px;margin:0 auto}
+.tri{width:100%;height:auto;display:block}
+.tri .tr-fill{fill:var(--tr-fill,rgba(18,53,91,.06))}
+.tri .tr-fill2{fill:var(--tr-fill2,rgba(200,149,46,.12))}
+.tri .tr-ce{stroke:var(--tr-ce,#0f8a7e);stroke-width:3}
+.tri .tr-pe{stroke:var(--tr-pe,#d9731a);stroke-width:3}
+.tri .tr-short{stroke:var(--tr-short,#2563c9);stroke-width:2.5;stroke-dasharray:8 6}
+.tri .tr-wide{stroke:var(--tr-wide,#7a3fb8);stroke-width:3}
+.tri .tr-axis{stroke:var(--muted,#5d6874);stroke-width:1;stroke-dasharray:3 5;opacity:.6}
+.tri .tr-tick{stroke:var(--muted,#5d6874);stroke-width:1.5;opacity:.7}
+.tri .tr-dot-atm{fill:var(--accent,#c8952e);stroke:var(--surface,#fff);stroke-width:3}
+.tri .tr-dot-ce{fill:var(--tr-ce,#0f8a7e);stroke:var(--surface,#fff);stroke-width:3}
+.tri .tr-dot-pe{fill:var(--tr-pe,#d9731a);stroke:var(--surface,#fff);stroke-width:3}
+.tri .tr-t{fill:var(--ink,#14202e);font-family:inherit;paint-order:stroke;stroke:var(--surface,#fff);stroke-width:6px;stroke-linejoin:round}
+.tri .tr-b{font-size:21px;font-weight:800}
+.tri .tr-s{font-size:17px;font-weight:600}
+.tri .tr-xs{font-size:15px;font-weight:600}
+.tri .tr-m{fill:var(--muted,#5d6874)}
+.tri .tr-rng{font-size:17px;font-weight:800;fill:var(--tr-short,#2563c9)}
+.tri text.tr-cec,.tri .tr-cec{fill:var(--tr-ce,#0f8a7e)}
+.tri text.tr-pec,.tri .tr-pec{fill:var(--tr-pe,#d9731a)}
+.tr-chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,120px),1fr));gap:8px;margin:12px 0}
+.tr-chips div,.tr-hl div{border:1px solid var(--line,#e2ddd2);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;background:var(--surface,#fff);min-width:0}
+.tr-chips span,.tr-hl span{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted,#5d6874);font-weight:700}
+.tr-chips b,.tr-hl b{font-variant-numeric:tabular-nums;font-size:1rem}
+.tr-hl{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:8px;margin:12px 0}
+.tr-tablewrap{overflow-x:auto;margin:8px 0}
+.tr-table{width:100%;border-collapse:collapse;font-size:.86rem;min-width:620px;font-variant-numeric:tabular-nums}
+.tr-table th,.tr-table td{padding:8px;border-bottom:1px solid var(--line,#e2ddd2);text-align:left;white-space:nowrap}
+.tr-table thead th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted,#5d6874)}
+.tr-table th small{color:var(--muted,#5d6874);font-weight:600}
+.tr-table .cec{color:var(--tr-ce,#0f8a7e);font-weight:700}
+.tr-table .pec{color:var(--tr-pe,#d9731a);font-weight:700}
+.tr-table tr.r-short th,.tr-table tr.t-short td:first-child{color:var(--tr-short,#2563c9)}
+.tr-table tr.r-wide th,.tr-table tr.t-wide td:first-child{color:var(--tr-wide,#7a3fb8)}
+.tr-table tr.t-atm td:first-child{color:var(--accent,#c8952e)}
+.tr-table tr.t-atm,.tr-table tr.t-short,.tr-table tr.t-wide{background:var(--tr-row,rgba(18,53,91,.04))}
+.tr-ladder summary{cursor:pointer;font-weight:700;padding:8px 0}
+`;
+
+
+/* ---- built-in levels (updated NSE & BSE bhavcopy 30 Oct 2026) ---- */
+const BUILT_IN_LEVELS = {"updatedAt": "2026-11-02T07:58:19.663Z", "source": "NSE & BSE bhavcopy 30 Oct 2026", "nifty": {"index": "NIFTY", "exchange": "NSE", "tradeDate": "2026-10-30", "forDate": "2026-11-02", "expiry": "2026-11-03", "step": 50, "underlying": 23053.1, "scanCenter": 23050, "atm": 23050, "cePdc": 103.9, "pePdc": 127.3, "ceMinusPe": 23.4, "pdcAvg": 115.6, "rounded": 100, "synBase": 23026.6, "wideMult": 2, "short": {"width": 100, "range": 200, "ce": {"strike": 22950, "pdc": 160.45, "iv": 76.6}, "pe": {"strike": 23150, "pdc": 185.5, "iv": 123.4}}, "wide": {"width": 200, "range": 400, "ce": {"strike": 22850, "pdc": 230.4, "iv": 176.6}, "pe": {"strike": 23250, "pdc": 256.75, "iv": 223.4}}, "ladder": [{"dist": 0, "tag": "ATM", "range": 0, "ceStrike": 23050, "cePdc": 103.9, "ceIv": -23.4, "peStrike": 23050, "pePdc": 127.3, "peIv": 23.4}, {"dist": 50, "tag": "", "range": 100, "ceStrike": 23000, "cePdc": 129.9, "ceIv": 26.6, "peStrike": 23100, "pePdc": 154.6, "peIv": 73.4}, {"dist": 100, "tag": "SHORT", "range": 200, "ceStrike": 22950, "cePdc": 160.45, "ceIv": 76.6, "peStrike": 23150, "pePdc": 185.5, "peIv": 123.4}, {"dist": 150, "tag": "", "range": 300, "ceStrike": 22900, "cePdc": 192.95, "ceIv": 126.6, "peStrike": 23200, "pePdc": 219.65, "peIv": 173.4}, {"dist": 200, "tag": "WIDE", "range": 400, "ceStrike": 22850, "cePdc": 230.4, "ceIv": 176.6, "peStrike": 23250, "pePdc": 256.75, "peIv": 223.4}], "hl": {"cePdh": 165, "cePdl": 65.55, "pePdh": 232.3, "pePdl": 104.25, "hh": 232.3, "ll": 65.55, "hhFrom": "PE PDH", "llFrom": "CE PDL", "bep": 148.93}}, "sensex": {"index": "SENSEX", "exchange": "BSE", "tradeDate": "2026-10-30", "forDate": "2026-11-02", "expiry": "2026-11-05", "step": 100, "underlying": 74459.53, "scanCenter": 74500, "atm": 74400, "cePdc": 567.05, "pePdc": 531.5, "ceMinusPe": 35.55, "pdcAvg": 549.28, "rounded": 500, "synBase": 74435.55, "wideMult": 2, "short": {"width": 500, "range": 1000, "ce": {"strike": 73900, "pdc": 889.1, "iv": 535.55}, "pe": {"strike": 74900, "pdc": 788.65, "iv": 464.45}}, "wide": {"width": 1000, "range": 2000, "ce": {"strike": 73400, "pdc": 1257.55, "iv": 1035.55}, "pe": {"strike": 75400, "pdc": 1129.95, "iv": 964.45}}, "ladder": [{"dist": 0, "tag": "ATM", "range": 0, "ceStrike": 74400, "cePdc": 567.05, "ceIv": 35.55, "peStrike": 74400, "pePdc": 531.5, "peIv": -35.55}, {"dist": 100, "tag": "", "range": 200, "ceStrike": 74300, "cePdc": 625.9, "ceIv": 135.55, "peStrike": 74500, "pePdc": 575.85, "peIv": 64.45}, {"dist": 200, "tag": "", "range": 400, "ceStrike": 74200, "cePdc": 685.85, "ceIv": 235.55, "peStrike": 74600, "pePdc": 624.9, "peIv": 164.45}, {"dist": 300, "tag": "", "range": 600, "ceStrike": 74100, "cePdc": 746.45, "ceIv": 335.55, "peStrike": 74700, "pePdc": 675.95, "peIv": 264.45}, {"dist": 400, "tag": "", "range": 800, "ceStrike": 74000, "cePdc": 806.8, "ceIv": 435.55, "peStrike": 74800, "pePdc": 729.95, "peIv": 364.45}, {"dist": 500, "tag": "SHORT", "range": 1000, "ceStrike": 73900, "cePdc": 889.1, "ceIv": 535.55, "peStrike": 74900, "pePdc": 788.65, "peIv": 464.45}, {"dist": 600, "tag": "", "range": 1200, "ceStrike": 73800, "cePdc": 954.1, "ceIv": 635.55, "peStrike": 75000, "pePdc": 853.95, "peIv": 564.45}, {"dist": 700, "tag": "", "range": 1400, "ceStrike": 73700, "cePdc": 1032.3, "ceIv": 735.55, "peStrike": 75100, "pePdc": 909.95, "peIv": 664.45}, {"dist": 800, "tag": "", "range": 1600, "ceStrike": 73600, "cePdc": 1107.25, "ceIv": 835.55, "peStrike": 75200, "pePdc": 986.9, "peIv": 764.45}, {"dist": 900, "tag": "", "range": 1800, "ceStrike": 73500, "cePdc": 1175.15, "ceIv": 935.55, "peStrike": 75300, "pePdc": 1064, "peIv": 864.45}, {"dist": 1000, "tag": "WIDE", "range": 2000, "ceStrike": 73400, "cePdc": 1257.55, "ceIv": 1035.55, "peStrike": 75400, "pePdc": 1129.95, "peIv": 964.45}], "hl": {"cePdh": 807.5, "cePdl": 433.1, "pePdh": 830.05, "pePdl": 449.85, "hh": 830.05, "ll": 433.1, "hhFrom": "PE PDH", "llFrom": "CE PDL", "bep": 631.58}}};
+
+(function () {
+  document.head.insertAdjacentHTML("beforeend", "<style>" + TRIANGLE_CSS + "</style>");
+  const $ = id => document.getElementById(id);
+  let data = BUILT_IN_LEVELS, ix = "nifty", source = "built in";
+
+  function draw() {
+    document.querySelectorAll("[data-ix]").forEach(b => b.setAttribute("aria-selected", b.dataset.ix === ix));
+    const L = data && data[ix];
+    if (!L) { $("meta").textContent = "No " + ix.toUpperCase() + " levels."; $("box").innerHTML = ""; return; }
+    $("meta").textContent = L.index + " · levels for " + fmtIsoDate(L.forDate || L.tradeDate) + " · from " + fmtIsoDate(L.tradeDate) +
+      " settlement (yesterday) · expiry " + fmtIsoDate(L.expiry) + " · step " + L.step;
+    $("box").innerHTML = renderTriangle(L);
+    const when = data.updatedAt ? new Date(data.updatedAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "—";
+    $("status").textContent = "Data: " + (data.source || "") + " · updated " + when + " · " + source;
+  }
+  document.querySelectorAll("[data-ix]").forEach(b => b.onclick = () => { ix = b.dataset.ix; draw(); });
+
+  async function refresh() {
+    if (location.protocol === "file:") return; // double-clicked: use built-in levels
+    try {
+      const r = await fetch("levels.json?t=" + Date.now(), { cache: "no-store" });
+      if (!r.ok) return;
+      const d = await r.json();
+      if (d && d.updatedAt && (!data.updatedAt || d.updatedAt > data.updatedAt)) { data = d; source = "from levels.json"; draw(); }
+    } catch (e) { /* keep built-in levels */ }
+  }
+
+  setInterval(() => { $("clock").textContent = new Date().toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" }); }, 1000);
+  draw();
+  refresh();
+  setInterval(refresh, 60000);
+})();
+</script>
+</body>
+</html>
