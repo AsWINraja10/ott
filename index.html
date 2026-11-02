@@ -278,6 +278,9 @@
     *{ animation:none !important; transition:none !important; }
     .reveal{ opacity:1; transform:none; }
   }
+  /* Login link: button on desktop, menu item on phones */
+  .navlinks a.nav-login{ display:none; }
+  @media (max-width: 900px){ .navlinks a.nav-login{ display:inline; color:var(--gold); } }
 </style>
 </head>
 <body>
@@ -293,8 +296,10 @@
       <a href="#about">Founder</a>
       <a href="#services">Services</a>
       <a href="#contact">Contact</a>
+      <a class="nav-login" href="login.html">Login</a>
     </div>
     <div class="navcall">
+      <a class="btn btn-line" href="login.html">Login</a>
       <a class="btn btn-gold" href="tel:+919842610908">Call Now</a>
     </div>
     <button class="burger" id="burgerBtn" aria-label="Toggle menu">&#9776;</button>
