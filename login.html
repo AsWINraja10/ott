@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Login — Option Tricky Trade</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#12355b">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="OTT">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+<main class="auth-wrap">
+  <a href="/" class="brand">← Option Tricky Trade</a>
+
+  <div class="card">
+    <div class="auth-head">
+      <h1 id="title">Welcome back</h1>
+      <p class="muted small" id="subtitle">Login to access your OTT dashboard.</p>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button type="button" data-tab="login" class="active" role="tab">Login</button>
+      <button type="button" data-tab="signup" role="tab">Create account</button>
+    </div>
+
+    <!-- LOGIN -->
+    <form id="loginForm" novalidate>
+      <label>Email
+        <input type="email" id="liEmail" autocomplete="email" required>
+      </label>
+      <label>Password
+        <input type="password" id="liPass" autocomplete="current-password" required>
+      </label>
+      <button class="btn primary block" type="submit">Login</button>
+      <button type="button" class="link" id="forgotBtn">Forgot password?</button>
+    </form>
+
+    <!-- SIGN UP -->
+    <form id="signupForm" novalidate hidden>
+      <label>Full name
+        <input id="suName" maxlength="60" autocomplete="name" required>
+      </label>
+      <label>Mobile number (WhatsApp)
+        <div class="phone">
+          <span>+91</span>
+          <input id="suMobile" inputmode="numeric" maxlength="10" autocomplete="tel-national" placeholder="98XXXXXXXX" required>
+        </div>
+      </label>
+      <label>Email
+        <input type="email" id="suEmail" autocomplete="email" required>
+      </label>
+      <label>Password (min 6 characters)
+        <input type="password" id="suPass" minlength="6" autocomplete="new-password" required>
+      </label>
+      <label class="check">
+        <input type="checkbox" id="suAgree" checked>
+        <span>Add me to the Option Tricky Trade WhatsApp community.</span>
+      </label>
+      <button class="btn primary block" type="submit">Create account</button>
+    </form>
+
+    <p id="msg" class="msg" role="status" aria-live="polite"></p>
+  </div>
+
+  <div id="appBar" class="appbar" hidden></div>
+  <p class="fine">For educational purposes only. Not investment advice.</p>
+</main>
+
+<script type="module">
+  import { auth, db, firebaseReady } from "./firebase-config.js";
+  import {
+    signInWithEmailAndPassword, createUserWithEmailAndPassword,
+    sendPasswordResetEmail, onAuthStateChanged, updateProfile
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { mountAppBar } from "./pwa.js";
+  mountAppBar(document.getElementById("appBar"));
+
+  const $ = id => document.getElementById(id);
+  const msg = $("msg");
+  let busy = false;
+  if (!firebaseReady) {
+    msg.innerHTML = 'Firebase keys are missing in <b>firebase-config.js</b>, so login cannot work yet. To test the triangle now, open <a href="triangle.html">triangle.html</a>.';
+    msg.className = "msg err";
+  }
+
+  function say(text, kind = "err") { msg.textContent = text; msg.className = "msg " + kind; }
+
+  function friendly(err) {
+    const c = err && err.code || "";
+    if (c.includes("invalid-credential") || c.includes("wrong-password") || c.includes("user-not-found")) return "Email or password is incorrect.";
+    if (c.includes("email-already-in-use")) return "An account with this email already exists. Please login.";
+    if (c.includes("weak-password")) return "Password must be at least 6 characters.";
+    if (c.includes("invalid-email")) return "Please enter a valid email address.";
+    if (c.includes("too-many-requests")) return "Too many attempts. Please wait a few minutes and try again.";
+    if (c.includes("network")) return "Network error. Check your internet connection.";
+    return "Something went wrong. Please try again.";
+  }
+
+  // Tabs
+  function showTab(name) {
+    document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+    $("loginForm").hidden = name !== "login";
+    $("signupForm").hidden = name !== "signup";
+    $("title").textContent = name === "login" ? "Welcome back" : "Create your account";
+    $("subtitle").textContent = name === "login"
+      ? "Login to access your OTT dashboard."
+      : "Free account — join our community. Membership is activated by OTT.";
+    say("", "");
+  }
+  document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+  if (location.hash === "#signup") showTab("signup");
+
+  // Already logged in → dashboard
+  onAuthStateChanged(auth, user => { if (user && !busy) location.replace("dashboard.html"); });
+
+  // Login
+  $("loginForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const email = $("liEmail").value.trim(), pass = $("liPass").value;
+    if (!email || !pass) return say("Enter your email and password.");
+    busy = true; say("Logging in…", "ok");
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+      location.replace("dashboard.html");
+    } catch (err) { busy = false; say(friendly(err)); }
+  });
+
+  // Forgot password
+  $("forgotBtn").onclick = async () => {
+    const email = $("liEmail").value.trim();
+    if (!email) return say("Type your email above, then tap “Forgot password?”.");
+    try {
+      await sendPasswordResetEmail(auth, email);
+      say("Password reset link sent. Check your email (and spam folder).", "ok");
+    } catch (err) { say(friendly(err)); }
+  };
+
+  // Sign up
+  $("suMobile").addEventListener("input", e => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10); });
+
+  $("signupForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const name = $("suName").value.trim();
+    const mobile = $("suMobile").value.trim();
+    const email = $("suEmail").value.trim();
+    const pass = $("suPass").value;
+
+    if (name.length < 2) return say("Please enter your full name.");
+    if (!/^[6-9]\d{9}$/.test(mobile)) return say("Enter a valid 10-digit Indian mobile number.");
+    if (!email) return say("Please enter your email.");
+    if (pass.length < 6) return say("Password must be at least 6 characters.");
+
+    busy = true; say("Creating your account…", "ok");
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      await updateProfile(cred.user, { displayName: name });
+      await setDoc(doc(db, "users", cred.user.uid), {
+        name, mobile, email,
+        wantsCommunity: $("suAgree").checked,
+        communityAdded: false,
+        memberUntil: null,
+        createdAt: serverTimestamp()
+      });
+      location.replace("dashboard.html");
+    } catch (err) { busy = false; say(friendly(err)); }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Admin — Option Tricky Trade</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#12355b">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="OTT">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+<header class="topbar">
+  <a href="dashboard.html">OTT Admin</a>
+  <div class="right">
+    <span class="who" id="who"></span>
+    <a href="dashboard.html" class="btn sm ghost">My dashboard</a>
+    <button class="btn sm ghost" id="logoutBtn">Logout</button>
+  </div>
+</header>
+
+<main class="container">
+  <p id="loading" class="muted">Checking admin access…</p>
+  <div id="denied" class="card" hidden>
+    <h2>Admin access only</h2>
+    <p class="muted">This account is not an admin. See the setup guide to add an admin.</p>
+  </div>
+
+  <div id="app" hidden>
+    <!-- ===== STATS ===== -->
+    <div class="stats">
+      <div class="stat"><span class="muted small">Total users</span><b id="sTotal">0</b></div>
+      <div class="stat"><span class="muted small">Active members</span><b id="sActive">0</b></div>
+      <div class="stat"><span class="muted small">Expiring in 5 days</span><b id="sExpiring">0</b></div>
+      <div class="stat"><span class="muted small">Not yet in community</span><b id="sCommunity">0</b></div>
+    </div>
+
+    <!-- ===== USERS ===== -->
+    <section class="card">
+      <h2>Users &amp; memberships</h2>
+      <div class="toolbar">
+        <input id="search" placeholder="Search name, email or mobile">
+        <select id="filter">
+          <option value="all">All users</option>
+          <option value="active">Active members</option>
+          <option value="expiring">Expiring in 5 days</option>
+          <option value="expired">Expired members</option>
+          <option value="free">Free (never member)</option>
+          <option value="community">Not added to community</option>
+        </select>
+        <button class="btn" id="exportBtn">⬇ Export CSV</button>
+        <button class="btn" id="refreshBtn">↻ Refresh</button>
+      </div>
+      <div class="table-wrap">
+        <table class="users-table">
+          <thead><tr>
+            <th>Name</th><th>Contact</th><th>Joined</th><th>Membership</th><th>Community</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="rows"><tr><td colspan="6" class="muted">Loading…</td></tr></tbody>
+        </table>
+      </div>
+      <p id="uMsg" class="msg"></p>
+    </section>
+
+    <!-- ===== TRIANGLE LEVELS ===== -->
+    <h2 class="section-title">Triangle levels (NIFTY &amp; SENSEX)</h2>
+    <section class="card">
+      <p id="lvStatus" class="muted">Checking last update…</p>
+      <p class="small muted">Levels update automatically every weekday evening from the NSE and BSE daily settlement files (bhavcopy). If an update fails, download the file from the exchange website and upload it here.</p>
+      <div class="grid">
+        <label>NSE F&amp;O bhavcopy (for NIFTY) — .zip / .csv, or a levels.json
+          <input type="file" id="lvNse" accept=".zip,.csv,.CSV,.json">
+        </label>
+        <label>BSE F&amp;O bhavcopy (for SENSEX) — .zip or .csv
+          <input type="file" id="lvBse" accept=".zip,.csv,.CSV">
+        </label>
+      </div>
+      <div class="actions">
+        <button class="btn" id="lvCalc">Calculate preview</button>
+        <button class="btn primary" id="lvSave" disabled>Save to member dashboard</button>
+      </div>
+      <p id="lvMsg" class="msg"></p>
+      <div class="tri-head" id="lvTabs" hidden>
+        <div class="seg" role="tablist" aria-label="Index">
+          <button type="button" role="tab" data-ix="nifty" aria-selected="true">NIFTY</button>
+          <button type="button" role="tab" data-ix="sensex" aria-selected="false">SENSEX</button>
+        </div>
+      </div>
+      <div id="lvPreview"></div>
+    </section>
+
+    <!-- ===== LIVE HINTS ===== -->
+    <h2 class="section-title">Live market hints (members)</h2>
+    <section class="grid">
+      <div class="card">
+        <form id="hintForm">
+          <label>New hint
+            <textarea id="hintText" maxlength="1000" placeholder="e.g. NIFTY 24500 CE — watch for breakout above 120"></textarea>
+          </label>
+          <button class="btn accent">Post hint to members</button>
+          <p id="hMsg" class="msg"></p>
+        </form>
+      </div>
+      <div class="card">
+        <h3>Recent hints</h3>
+        <div id="hintList" class="hints"><p class="muted">None yet.</p></div>
+      </div>
+    </section>
+
+    <!-- ===== MEMBER CONTENT ===== -->
+    <h2 class="section-title">Member content</h2>
+    <section class="card">
+      <form id="memberForm">
+        <div class="grid">
+          <div>
+            <label>Morning video YouTube link (unlisted)
+              <input id="mVideo" placeholder="https://youtu.be/...">
+            </label>
+            <label>Video title
+              <input id="mVideoTitle" placeholder="Market probability — 24 Oct">
+            </label>
+          </div>
+          <div>
+            <label>Meeting Point Indicator link
+              <input id="mMeeting" placeholder="https://www.tradingview.com/script/...">
+            </label>
+            <label>Weekly Chart Indicator link
+              <input id="mWeekly" placeholder="https://www.tradingview.com/script/...">
+            </label>
+          </div>
+          <div>
+            <label>Members WhatsApp group link
+              <input id="mGroup" placeholder="https://chat.whatsapp.com/...">
+            </label>
+            <label>Indicator note (optional)
+              <input id="mNote" placeholder="Send your TradingView username to get access">
+            </label>
+          </div>
+        </div>
+        <button class="btn primary">Save member content</button>
+        <p id="mMsg" class="msg"></p>
+      </form>
+    </section>
+
+    <!-- ===== PUBLIC CONTENT ===== -->
+    <h2 class="section-title">Free user content</h2>
+    <section class="card">
+      <form id="publicForm">
+        <div class="grid">
+          <div>
+            <label>WhatsApp community invite link
+              <input id="pCommunity" placeholder="https://chat.whatsapp.com/...">
+            </label>
+            <label>Notice for all users (optional)
+              <input id="pNotice" maxlength="300" placeholder="Masterclass batch starts 1 Nov — register now!">
+            </label>
+          </div>
+          <div>
+            <label>Free lesson YouTube link (optional)
+              <input id="pVideo" placeholder="https://youtu.be/...">
+            </label>
+            <label>Free lesson title
+              <input id="pVideoTitle">
+            </label>
+          </div>
+        </div>
+        <button class="btn primary">Save free content</button>
+        <p id="pMsg" class="msg"></p>
+      </form>
+    </section>
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script type="module">
+  import { auth, db, SITE, esc, fmtDate, fmtDateTime, memberUntil, isActiveMember, daysLeft } from "./firebase-config.js";
+  import { parseCsv, computeLevels } from "./triangle-calc.js";
+  import { renderTriangle, TRIANGLE_CSS, fmtIsoDate } from "./triangle-view.js";
+  import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import {
+    doc, getDoc, getDocs, setDoc, updateDoc, addDoc, deleteDoc, collection, query, orderBy, limit,
+    onSnapshot, serverTimestamp, Timestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const $ = id => document.getElementById(id);
+  let users = [];
+
+  $("logoutBtn").onclick = async () => { try { const m = await import("./pwa.js"); await m.removeDeviceToken(); } catch {} await signOut(auth); location.replace("login.html"); };
+
+  onAuthStateChanged(auth, async user => {
+    if (!user) return location.replace("login.html");
+    $("who").textContent = user.email;
+    let ok = false;
+    try { ok = (await getDoc(doc(db, "admins", user.uid))).exists(); } catch {}
+    $("loading").hidden = true;
+    if (!ok) { $("denied").hidden = false; return; }
+    $("app").hidden = false;
+    loadUsers(); loadSettings(); watchHints(); loadLevels();
+  });
+
+  function flash(el, text, kind = "ok") { el.textContent = text; el.className = "msg " + kind; if (kind === "ok") setTimeout(() => { el.textContent = ""; }, 3500); }
+
+  // ================= USERS =================
+  async function loadUsers() {
+    try {
+      const snap = await getDocs(query(collection(db, "users"), orderBy("createdAt", "desc")));
+      users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderUsers();
+    } catch (e) { flash($("uMsg"), "Could not load users: " + e.message, "err"); }
+  }
+
+  function status(u) {
+    const until = memberUntil(u);
+    if (isActiveMember(u)) return daysLeft(u) <= 5 ? "expiring" : "active";
+    return until ? "expired" : "free";
+  }
+
+  function renderUsers() {
+    const q = $("search").value.trim().toLowerCase();
+    const f = $("filter").value;
+
+    $("sTotal").textContent = users.length;
+    $("sActive").textContent = users.filter(isActiveMember).length;
+    $("sExpiring").textContent = users.filter(u => status(u) === "expiring").length;
+    $("sCommunity").textContent = users.filter(u => !u.communityAdded).length;
+
+    const list = users.filter(u => {
+      if (q && !`${u.name} ${u.email} ${u.mobile}`.toLowerCase().includes(q)) return false;
+      const s = status(u);
+      if (f === "active") return s === "active" || s === "expiring";
+      if (f === "expiring") return s === "expiring";
+      if (f === "expired") return s === "expired";
+      if (f === "free") return s === "free";
+      if (f === "community") return !u.communityAdded;
+      return true;
+    });
+
+    if (!list.length) { $("rows").innerHTML = `<tr><td colspan="6" class="muted">No users found.</td></tr>`; return; }
+
+    $("rows").innerHTML = list.map(u => {
+      const s = status(u), until = memberUntil(u);
+      const joined = u.createdAt && u.createdAt.toDate ? fmtDate(u.createdAt.toDate()) : "—";
+      const badge = {
+        active: `<span class="badge ok">Active</span><br><span class="small muted">till ${fmtDate(until)} (${daysLeft(u)}d)</span>`,
+        expiring: `<span class="badge warn">Expiring</span><br><span class="small muted">till ${fmtDate(until)} (${daysLeft(u)}d)</span>`,
+        expired: `<span class="badge bad">Expired</span><br><span class="small muted">on ${fmtDate(until)}</span>`,
+        free: `<span class="badge plain">Free</span>`
+      }[s];
+      const wa = `https://wa.me/91${encodeURIComponent(u.mobile || "")}`;
+      const isMem = s === "active" || s === "expiring";
+      return `<tr data-id="${esc(u.id)}">
+        <td data-l="Name"><b>${esc(u.name)}</b></td>
+        <td data-l="Contact">${esc(u.email)}<br><a href="${wa}" target="_blank" rel="noopener">+91 ${esc(u.mobile)}</a></td>
+        <td data-l="Joined">${joined}</td>
+        <td data-l="Membership">${badge}</td>
+        <td data-l="Community"><label class="check" style="margin:0"><input type="checkbox" data-act="community" ${u.communityAdded ? "checked" : ""}> <span class="small">Added${u.wantsCommunity === false ? " (opted out)" : ""}</span></label></td>
+        <td data-l="Actions"><div class="row-actions">
+          <select data-role="months" aria-label="Months">
+            <option value="1">1 month</option><option value="2">2 months</option>
+            <option value="3">3 months</option><option value="6">6 months</option><option value="12">12 months</option>
+          </select>
+          <button class="btn sm primary" data-act="activate">${isMem ? "Extend" : "Activate"}</button>
+          ${isMem || s === "expired" ? `<button class="btn sm danger" data-act="deactivate">Deactivate</button>` : ""}
+        </div></td>
+      </tr>`;
+    }).join("");
+  }
+
+  $("search").addEventListener("input", renderUsers);
+  $("filter").addEventListener("change", renderUsers);
+  $("refreshBtn").onclick = loadUsers;
+
+  $("rows").addEventListener("click", async e => {
+    const btn = e.target.closest("[data-act]");
+    if (!btn || btn.tagName === "INPUT") return;
+    const tr = btn.closest("tr"), id = tr.dataset.id;
+    const u = users.find(x => x.id === id);
+    if (!u) return;
+
+    if (btn.dataset.act === "activate") {
+      const months = Number(tr.querySelector('[data-role="months"]').value);
+      const days = months * SITE.membershipDays;
+      // Extend from the current end date if still active, otherwise from now
+      const base = isActiveMember(u) ? memberUntil(u) : new Date();
+      const end = new Date(base.getTime() + days * 86400000);
+      end.setHours(23, 59, 59, 0);
+      if (!confirm(`${isActiveMember(u) ? "Extend" : "Activate"} membership for ${u.name}\n+91 ${u.mobile}\n\nNew end date: ${fmtDate(end)}`)) return;
+      btn.disabled = true;
+      try {
+        const patch = { memberUntil: Timestamp.fromDate(end), lastActivatedAt: serverTimestamp(), lastActivatedDays: days };
+        if (!isActiveMember(u)) patch.memberSince = serverTimestamp();
+        await updateDoc(doc(db, "users", id), patch);
+        Object.assign(u, { memberUntil: Timestamp.fromDate(end) });
+        renderUsers();
+        flash($("uMsg"), `Membership for ${u.name} active until ${fmtDate(end)}.`);
+      } catch (err) { btn.disabled = false; flash($("uMsg"), "Failed: " + err.message, "err"); }
+    }
+
+    if (btn.dataset.act === "deactivate") {
+      if (!confirm(`Remove membership for ${u.name}? They will see free content only.`)) return;
+      try {
+        await updateDoc(doc(db, "users", id), { memberUntil: null });
+        u.memberUntil = null;
+        renderUsers();
+        flash($("uMsg"), `Membership removed for ${u.name}.`);
+      } catch (err) { flash($("uMsg"), "Failed: " + err.message, "err"); }
+    }
+  });
+
+  $("rows").addEventListener("change", async e => {
+    if (e.target.dataset.act !== "community") return;
+    const id = e.target.closest("tr").dataset.id, u = users.find(x => x.id === id);
+    try {
+      await updateDoc(doc(db, "users", id), { communityAdded: e.target.checked });
+      u.communityAdded = e.target.checked;
+      $("sCommunity").textContent = users.filter(x => !x.communityAdded).length;
+    } catch (err) { e.target.checked = !e.target.checked; flash($("uMsg"), "Failed: " + err.message, "err"); }
+  });
+
+  // CSV export (filtered view) — for adding contacts to the WhatsApp community
+  $("exportBtn").onclick = () => {
+    const rows = [["Name", "Mobile", "Email", "Status", "Member until", "Joined", "In community"]];
+    const q = $("search").value.trim().toLowerCase(), f = $("filter").value;
+    users.forEach(u => {
+      const s = status(u);
+      if (q && !`${u.name} ${u.email} ${u.mobile}`.toLowerCase().includes(q)) return;
+      if (f === "active" && !(s === "active" || s === "expiring")) return;
+      if (["expiring", "expired", "free"].includes(f) && s !== f) return;
+      if (f === "community" && u.communityAdded) return;
+      rows.push([u.name, "+91" + (u.mobile || ""), u.email, s,
+        memberUntil(u) ? fmtDate(memberUntil(u)) : "",
+        u.createdAt && u.createdAt.toDate ? fmtDate(u.createdAt.toDate()) : "",
+        u.communityAdded ? "Yes" : "No"]);
+    });
+    const csv = rows.map(r => r.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv" }));
+    a.download = `ott-users-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+  };
+
+  // ================= HINTS =================
+  function watchHints() {
+    const q = query(collection(db, "hints"), orderBy("createdAt", "desc"), limit(30));
+    onSnapshot(q, snap => {
+      $("hintList").innerHTML = snap.empty ? `<p class="muted">None yet.</p>` : snap.docs.map(d => {
+        const h = d.data();
+        const t = h.createdAt && h.createdAt.toDate ? fmtDateTime(h.createdAt.toDate()) : "just now";
+        return `<div class="hint"><time>${esc(t)} · <button class="link small" data-del="${esc(d.id)}">delete</button></time>${esc(h.text)}</div>`;
+      }).join("");
+    });
+  }
+
+  $("hintForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const text = $("hintText").value.trim();
+    if (!text) return;
+    try {
+      await addDoc(collection(db, "hints"), { text, createdAt: serverTimestamp() });
+      $("hintText").value = "";
+      flash($("hMsg"), "Posted. Members see it instantly.");
+    } catch (err) { flash($("hMsg"), "Failed: " + err.message, "err"); }
+  });
+
+  $("hintList").addEventListener("click", async e => {
+    const id = e.target.dataset && e.target.dataset.del;
+    if (id && confirm("Delete this hint?")) await deleteDoc(doc(db, "hints", id));
+  });
+
+  // ================= TRIANGLE LEVELS =================
+  document.head.insertAdjacentHTML("beforeend", `<style>${TRIANGLE_CSS}</style>`);
+  let lvDraft = null, lvIx = "nifty";
+
+  async function loadLevels() {
+    try {
+      const s = await getDoc(doc(db, "levels", "latest"));
+      if (!s.exists()) { $("lvStatus").textContent = "No levels saved yet. They appear after the first evening run, or upload a file below."; return; }
+      const d = s.data();
+      const when = d.updatedAt ? new Date(d.updatedAt.toDate ? d.updatedAt.toDate() : d.updatedAt) : null;
+      const part = L => L ? `${L.index}: ${fmtIsoDate(L.tradeDate)} settlement, ATM ${L.atm}, ±${L.rounded}` : "";
+      $("lvStatus").innerHTML = `<b>Last update:</b> ${when ? esc(fmtDateTime(when)) : "—"} (${esc(d.source || "auto")})<br>${esc([part(d.nifty), part(d.sensex)].filter(Boolean).join(" · "))}` +
+        (d.errors && d.errors.length ? `<br><span class="badge bad">Last run had problems</span> <span class="small">${esc(d.errors.join("; "))}</span>` : "");
+    } catch (e) { $("lvStatus").textContent = "Could not read levels: " + e.message; }
+  }
+
+  async function readBhav(file) {
+    if (/\.zip$/i.test(file.name)) {
+      if (!window.JSZip) throw new Error("Zip support did not load. Unzip the file and upload the .csv instead.");
+      const zip = await JSZip.loadAsync(file);
+      const entry = Object.values(zip.files).find(f => /\.csv$/i.test(f.name));
+      if (!entry) throw new Error(file.name + " has no CSV inside.");
+      return entry.async("string");
+    }
+    return file.text();
+  }
+
+  function drawLvPreview() {
+    document.querySelectorAll("#lvTabs [data-ix]").forEach(b => b.setAttribute("aria-selected", b.dataset.ix === lvIx));
+    const L = lvDraft && lvDraft[lvIx];
+    $("lvPreview").innerHTML = L ? `<p class="small muted">${esc(L.index)} · ${esc(fmtIsoDate(L.tradeDate))} settlement · expiry ${esc(fmtIsoDate(L.expiry))}</p>` + renderTriangle(L)
+                                 : `<p class="muted">No ${lvIx.toUpperCase()} file uploaded.</p>`;
+  }
+  document.querySelectorAll("#lvTabs [data-ix]").forEach(b => b.onclick = () => { lvIx = b.dataset.ix; drawLvPreview(); });
+
+  $("lvCalc").onclick = async () => {
+    const nse = $("lvNse").files[0], bse = $("lvBse").files[0];
+    if (!nse && !bse) return flash($("lvMsg"), "Choose at least one bhavcopy file.", "err");
+    lvDraft = {}; const errs = [];
+    for (const [file, ix] of [[nse, "NIFTY"], [bse, "SENSEX"]]) {
+      if (!file) continue;
+      try {
+        if (/\.json$/i.test(file.name)) {
+          // A ready levels.json (from  node scripts/fetch-levels.mjs --local) holds both indexes
+          const d = JSON.parse(await file.text());
+          if (d.nifty) lvDraft.nifty = d.nifty;
+          if (d.sensex) lvDraft.sensex = d.sensex;
+          if (!d.nifty && !d.sensex) throw new Error(file.name + " has no nifty/sensex levels.");
+        } else {
+          lvDraft[ix.toLowerCase()] = computeLevels(parseCsv(await readBhav(file)), ix);
+        }
+      }
+      catch (e) { errs.push(e.message); }
+    }
+    $("lvSave").disabled = !lvDraft.nifty && !lvDraft.sensex;
+    $("lvTabs").hidden = $("lvSave").disabled;
+    lvIx = lvDraft.nifty ? "nifty" : "sensex";
+    drawLvPreview();
+    flash($("lvMsg"), errs.length ? errs.join(" ") : "Preview ready. Check it, then save.", errs.length ? "err" : "ok");
+  };
+
+  $("lvSave").onclick = async () => {
+    if (!lvDraft) return;
+    try {
+      await setDoc(doc(db, "levels", "latest"), { ...lvDraft, source: "manual upload", updatedAt: serverTimestamp(), errors: [] }, { merge: true });
+      flash($("lvMsg"), "Saved. Members see the new levels now.");
+      $("lvSave").disabled = true;
+      loadLevels();
+    } catch (e) { flash($("lvMsg"), "Save failed: " + e.message, "err"); }
+  };
+
+  // ================= SETTINGS =================
+  async function loadSettings() {
+    try {
+      const m = (await getDoc(doc(db, "settings", "members"))).data() || {};
+      $("mVideo").value = m.morningVideoUrl || "";
+      $("mVideoTitle").value = m.morningVideoTitle || "";
+      $("mMeeting").value = m.meetingPointUrl || "";
+      $("mWeekly").value = m.weeklyChartUrl || "";
+      $("mGroup").value = m.memberGroupLink || "";
+      $("mNote").value = m.indicatorNote || "";
+      const p = (await getDoc(doc(db, "settings", "public"))).data() || {};
+      $("pCommunity").value = p.communityLink || "";
+      $("pNotice").value = p.notice || "";
+      $("pVideo").value = p.freeVideoUrl || "";
+      $("pVideoTitle").value = p.freeVideoTitle || "";
+    } catch {}
+  }
+
+  $("memberForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const url = $("mVideo").value.trim();
+    const data = {
+      morningVideoUrl: url,
+      morningVideoTitle: $("mVideoTitle").value.trim(),
+      meetingPointUrl: $("mMeeting").value.trim(),
+      weeklyChartUrl: $("mWeekly").value.trim(),
+      memberGroupLink: $("mGroup").value.trim(),
+      indicatorNote: $("mNote").value.trim(),
+      updatedAt: serverTimestamp()
+    };
+    try {
+      const prev = (await getDoc(doc(db, "settings", "members"))).data() || {};
+      if (url && url !== prev.morningVideoUrl) data.morningVideoAt = serverTimestamp();
+      await setDoc(doc(db, "settings", "members"), data, { merge: true });
+      flash($("mMsg"), "Member content saved.");
+    } catch (err) { flash($("mMsg"), "Failed: " + err.message, "err"); }
+  });
+
+  $("publicForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    try {
+      await setDoc(doc(db, "settings", "public"), {
+        communityLink: $("pCommunity").value.trim(),
+        notice: $("pNotice").value.trim(),
+        freeVideoUrl: $("pVideo").value.trim(),
+        freeVideoTitle: $("pVideoTitle").value.trim(),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      flash($("pMsg"), "Free content saved.");
+    } catch (err) { flash($("pMsg"), "Failed: " + err.message, "err"); }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>My Dashboard — Option Tricky Trade</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#12355b">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="OTT">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+<header class="topbar">
+  <a href="/">Option Tricky Trade</a>
+  <div class="right">
+    <span class="who" id="who"></span>
+    <a href="admin.html" class="btn sm ghost" id="adminLink" hidden>Admin</a>
+    <button class="btn sm ghost" id="logoutBtn">Logout</button>
+  </div>
+</header>
+
+<main class="container">
+  <p id="loading" class="muted">Loading your dashboard…</p>
+
+  <!-- Shown if account has no profile yet (rare) -->
+  <section id="completeProfile" class="card" hidden style="max-width:460px">
+    <h2>Complete your profile</h2>
+    <p class="muted small">We need your mobile number to add you to our WhatsApp community.</p>
+    <form id="profileForm">
+      <label>Full name <input id="pName" maxlength="60" required></label>
+      <label>Mobile number (WhatsApp)
+        <div class="phone"><span>+91</span><input id="pMobile" inputmode="numeric" maxlength="10" required></div>
+      </label>
+      <button class="btn primary">Save</button>
+      <p id="pMsg" class="msg"></p>
+    </form>
+  </section>
+
+  <div id="app" hidden>
+    <div class="hero">
+      <div>
+        <h1 id="hello">Welcome</h1>
+        <p class="muted" id="statusLine"></p>
+      </div>
+      <span id="statusBadge" class="badge plain"></span>
+    </div>
+
+    <div id="notice" class="notice" hidden></div>
+    <div id="appBar" class="appbar" hidden></div>
+
+    <!-- ========== TRIANGLE (all logged-in users) ========== -->
+        <div class="card" id="triCard" style="margin-bottom:16px">
+          <div class="tri-head">
+            <div>
+              <h2>🔺 Triangle levels</h2>
+              <p class="muted small" id="triMeta">Loading today's levels…</p>
+            </div>
+            <div class="seg" role="tablist" aria-label="Index">
+              <button type="button" role="tab" data-ix="nifty" aria-selected="true">NIFTY</button>
+              <button type="button" role="tab" data-ix="sensex" aria-selected="false">SENSEX</button>
+            </div>
+          </div>
+          <div id="triBox"></div>
+        </div>
+
+    <!-- ========== MEMBER CONTENT ========== -->
+    <section id="memberView" hidden>
+      <div class="grid">
+        <div class="card span">
+          <h2>📺 Today's morning market video</h2>
+          <p class="muted small" id="videoMeta"></p>
+          <div id="videoBox"></div>
+        </div>
+
+        <div class="card">
+          <h2><span class="live-dot"></span>Live market hints</h2>
+          <p class="muted small">Updates appear here automatically during market hours.</p>
+          <div id="hints" class="hints"><p class="muted">No hints posted yet today.</p></div>
+        </div>
+
+        <div class="card">
+          <h2>📈 Member indicators</h2>
+          <p class="muted small">Exclusive TradingView indicators for members.</p>
+          <div class="actions" id="indicatorBtns"></div>
+
+          <h2 style="margin-top:20px">💬 Members WhatsApp group</h2>
+          <p class="muted small">Private group for active members only.</p>
+          <div class="actions" id="memberGroupBtn"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== NORMAL (FREE) CONTENT ========== -->
+    <section id="normalView" hidden>
+      <div class="grid">
+        <div class="card">
+          <h2>💬 Join our WhatsApp community</h2>
+          <p>Get free updates, class announcements and YouTube video alerts from Option Tricky Trade.</p>
+          <div class="actions" id="communityBtn"></div>
+        </div>
+
+        <div class="card">
+          <h2>⭐ Become a member</h2>
+          <ul class="list perks">
+            <li>Daily morning market probability video before open</li>
+            <li>Live-market hints during trading hours</li>
+            <li>Meeting Point Indicator &amp; Weekly Chart Indicator (TradingView)</li>
+            <li>Private members WhatsApp group</li>
+          </ul>
+          <p class="muted small" style="margin-top:10px">Monthly membership is activated by the OTT team. Message us on WhatsApp to join.</p>
+          <div class="actions"><a class="btn wa" id="requestBtn" target="_blank" rel="noopener">Request membership on WhatsApp</a></div>
+        </div>
+
+        <div class="card span" id="freeVideoCard" hidden>
+          <h2>🎓 Free lesson</h2>
+          <div id="freeVideoBox"></div>
+        </div>
+
+        <div class="card span">
+          <h2>Free learning</h2>
+          <p>Watch 7+ years of option trading lessons on our YouTube channel.</p>
+          <div class="actions">
+            <a class="btn" href="https://www.youtube.com/@OPTIONTRICKYTRADE" target="_blank" rel="noopener">▶ YouTube channel</a>
+            <a class="btn" href="https://www.instagram.com/option_tricky_trade_" target="_blank" rel="noopener">Instagram</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <p class="fine">For educational purposes only. Options trading involves significant risk. Not investment advice.</p>
+  </div>
+</main>
+
+<script type="module">
+  import { firebaseReady, auth, db, SITE, esc, fmtDate, fmtDateTime, memberUntil, isActiveMember, daysLeft, safeUrl, ytEmbed } from "./firebase-config.js";
+  import { renderTriangle, TRIANGLE_CSS, fmtIsoDate } from "./triangle-view.js";
+  import { mountAppBar, removeDeviceToken } from "./pwa.js";
+  import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import {
+    doc, getDoc, setDoc, serverTimestamp, collection, query, orderBy, limit, onSnapshot
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const $ = id => document.getElementById(id);
+  let currentUser = null;
+  document.head.insertAdjacentHTML("beforeend", `<style>${TRIANGLE_CSS}</style>`);
+
+  $("logoutBtn").onclick = async () => { await removeDeviceToken(); await signOut(auth); location.replace("login.html"); };
+
+  // Notification arriving while the app is open → small banner
+  document.addEventListener("ott-push", e => {
+    const n = e.detail || {};
+    const t = document.createElement("div");
+    t.className = "push-toast";
+    t.innerHTML = `<b>${esc(n.title || "Option Tricky Trade")}</b><span>${esc(n.body || "")}</span>`;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 6000);
+    if (/level/i.test(n.title || "")) loadTriangle();
+  });
+
+  if (!firebaseReady) {
+    $("loading").innerHTML = `<div class="notice"><b>Firebase keys are missing.</b> Paste your project's keys into <code>firebase-config.js</code> (see SETUP-GUIDE.md, Step 1). Until then login does not work.<br>To test the triangle on your PC now, open <a href="triangle.html">triangle.html</a>.</div>`;
+  }
+  onAuthStateChanged(auth, async user => {
+    if (!firebaseReady) return;
+    if (!user) return location.replace("login.html");
+    currentUser = user;
+    $("who").textContent = user.email;
+
+    // admin link
+    getDoc(doc(db, "admins", user.uid)).then(s => { if (s.exists()) $("adminLink").hidden = false; }).catch(() => {});
+
+    const snap = await getDoc(doc(db, "users", user.uid));
+    $("loading").hidden = true;
+    if (!snap.exists()) {
+      $("pName").value = user.displayName || "";
+      $("completeProfile").hidden = false;
+      return;
+    }
+    render(snap.data());
+  });
+
+  // Profile completion (for accounts missing a profile)
+  $("pMobile").addEventListener("input", e => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10); });
+  $("profileForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const name = $("pName").value.trim(), mobile = $("pMobile").value.trim();
+    if (name.length < 2) return ($("pMsg").textContent = "Enter your name.");
+    if (!/^[6-9]\d{9}$/.test(mobile)) return ($("pMsg").textContent = "Enter a valid 10-digit mobile number.");
+    try {
+      await setDoc(doc(db, "users", currentUser.uid), {
+        name, mobile, email: currentUser.email, wantsCommunity: true,
+        communityAdded: false, memberUntil: null, createdAt: serverTimestamp()
+      });
+      location.reload();
+    } catch { $("pMsg").textContent = "Could not save. Please try again."; }
+  });
+
+  async function render(u) {
+    $("app").hidden = false;
+    $("hello").textContent = "Welcome, " + (u.name || "trader").split(" ")[0];
+
+    const active = isActiveMember(u);
+    const until = memberUntil(u);
+
+    // Public settings (notice, community link, free video) — any logged-in user
+    let pub = {};
+    try { const s = await getDoc(doc(db, "settings", "public")); if (s.exists()) pub = s.data(); } catch {}
+    if (pub.notice) { $("notice").textContent = pub.notice; $("notice").hidden = false; }
+    loadTriangle();
+    mountAppBar($("appBar"), { user: currentUser });
+
+    if (active) {
+      const left = daysLeft(u);
+      $("statusBadge").textContent = "★ Member";
+      $("statusBadge").className = "badge " + (left <= 5 ? "warn" : "ok");
+      $("statusLine").textContent = `Membership active until ${fmtDate(until)} · ${left} day${left === 1 ? "" : "s"} left` +
+        (left <= 5 ? " — message us on WhatsApp to renew." : "");
+      $("memberView").hidden = false;
+      renderMember();
+    } else {
+      $("statusBadge").textContent = until ? "Membership expired" : "Free account";
+      $("statusBadge").className = "badge " + (until ? "bad" : "plain");
+      $("statusLine").textContent = until
+        ? `Your membership ended on ${fmtDate(until)}. Message us to renew.`
+        : "You have a free account. Upgrade to membership for daily videos and live hints.";
+      $("normalView").hidden = false;
+
+      const community = safeUrl(pub.communityLink);
+      $("communityBtn").innerHTML = community
+        ? `<a class="btn wa" href="${esc(community)}" target="_blank" rel="noopener">Join WhatsApp community</a>`
+        : `<p class="muted small">Our team will add you to the community using your mobile number +91 ${esc(u.mobile)}.</p>`;
+
+      const text = `Hi OTT, I want to join the monthly membership.\nName: ${u.name}\nEmail: ${u.email}\nMobile: ${u.mobile}`;
+      $("requestBtn").href = `https://wa.me/${SITE.ownerWhatsApp}?text=${encodeURIComponent(text)}`;
+
+      const fv = ytEmbed(pub.freeVideoUrl);
+      if (fv) {
+        $("freeVideoBox").innerHTML = (pub.freeVideoTitle ? `<p>${esc(pub.freeVideoTitle)}</p>` : "") +
+          `<div class="video"><iframe src="${esc(fv)}" allowfullscreen loading="lazy" title="Free lesson"></iframe></div>`;
+        $("freeVideoCard").hidden = false;
+      }
+    }
+  }
+
+  // Triangle levels (written daily by the auto-fetch job)
+  let levels = null, triIx = "nifty";
+  function drawTriangle() {
+    document.querySelectorAll("[data-ix]").forEach(b => b.setAttribute("aria-selected", b.dataset.ix === triIx));
+    const L = levels && levels[triIx];
+    if (!L) {
+      $("triMeta").textContent = "Today's levels appear here before market open.";
+      $("triBox").innerHTML = "";
+      return;
+    }
+    $("triMeta").textContent = `${L.index} · levels for ${fmtIsoDate(L.forDate || L.tradeDate)} · from ${fmtIsoDate(L.tradeDate)} settlement (yesterday) · expiry ${fmtIsoDate(L.expiry)} · step ${L.step}`;
+    $("triBox").innerHTML = renderTriangle(L);
+    if (location.hash === "#triangle") $("triCard").scrollIntoView({ block: "start" });
+  }
+  document.querySelectorAll("[data-ix]").forEach(b => b.onclick = () => { triIx = b.dataset.ix; drawTriangle(); });
+
+  // Live: redraws by itself whenever new levels are saved (evening job or admin upload)
+  let triWatching = false;
+  async function localLevels() {
+    // On your own PC (Live Server) fall back to levels.json from  node scripts/fetch-levels.mjs --local
+    if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return null;
+    try { const r = await fetch("levels.json?t=" + Date.now(), { cache: "no-store" }); return r.ok ? await r.json() : null; } catch { return null; }
+  }
+  async function loadTriangle() {
+    if (triWatching) return;
+    triWatching = true;
+    onSnapshot(doc(db, "levels", "latest"), async s => {
+      levels = s.exists() ? s.data() : await localLevels();
+      drawTriangle();
+    }, async () => { levels = await localLevels(); drawTriangle(); });
+  }
+
+  async function renderMember() {
+    let m = {};
+    try { const s = await getDoc(doc(db, "settings", "members")); if (s.exists()) m = s.data(); } catch {}
+
+    // Morning video
+    const emb = ytEmbed(m.morningVideoUrl);
+    const posted = m.morningVideoAt && m.morningVideoAt.toDate ? m.morningVideoAt.toDate() : null;
+    $("videoMeta").textContent = (m.morningVideoTitle || "") + (posted ? `  ·  Posted ${fmtDateTime(posted)}` : "");
+    $("videoBox").innerHTML = emb
+      ? `<div class="video"><iframe src="${esc(emb)}" allowfullscreen title="Morning market video"></iframe></div>`
+      : `<p class="muted">Today's video will appear here before market open.</p>`;
+
+    // Indicators
+    const btns = [];
+    const mp = safeUrl(m.meetingPointUrl), wk = safeUrl(m.weeklyChartUrl);
+    if (mp) btns.push(`<a class="btn primary" href="${esc(mp)}" target="_blank" rel="noopener">Meeting Point Indicator</a>`);
+    if (wk) btns.push(`<a class="btn primary" href="${esc(wk)}" target="_blank" rel="noopener">Weekly Chart Indicator</a>`);
+    if (m.indicatorNote) btns.push(`<p class="muted small" style="width:100%">${esc(m.indicatorNote)}</p>`);
+    $("indicatorBtns").innerHTML = btns.join("") || `<p class="muted small">Indicator access details will be shared soon.</p>`;
+
+    // Member group
+    const grp = safeUrl(m.memberGroupLink);
+    $("memberGroupBtn").innerHTML = grp
+      ? `<a class="btn wa" href="${esc(grp)}" target="_blank" rel="noopener">Join members group</a>`
+      : `<p class="muted small">Group link will be shared soon.</p>`;
+
+    // Live hints (realtime)
+    const q = query(collection(db, "hints"), orderBy("createdAt", "desc"), limit(30));
+    onSnapshot(q, snap => {
+      if (snap.empty) { $("hints").innerHTML = `<p class="muted">No hints posted yet today.</p>`; return; }
+      $("hints").innerHTML = snap.docs.map(d => {
+        const h = d.data();
+        const t = h.createdAt && h.createdAt.toDate ? fmtDateTime(h.createdAt.toDate()) : "just now";
+        return `<div class="hint"><time>${esc(t)}</time>${esc(h.text)}</div>`;
+      }).join("");
+    }, () => { $("hints").innerHTML = `<p class="muted">Could not load hints. Refresh the page.</p>`; });
+  }
+</script>
+</body>
+</html>
