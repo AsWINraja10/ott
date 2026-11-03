@@ -179,7 +179,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script type="module">
   import { auth, db, SITE, esc, fmtDate, fmtDateTime, memberUntil, isActiveMember, daysLeft } from "./firebase-config.js";
-  import { parseCsv, computeLevels } from "./triangle-calc.js";
+  import { parseCsv, computeLevels, basicLevels } from "./triangle-calc.js";
   import { renderTriangle, TRIANGLE_CSS, fmtIsoDate } from "./triangle-view.js";
   import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import {
@@ -437,6 +437,10 @@
     if (!lvDraft) return;
     try {
       await setDoc(doc(db, "levels", "latest"), { ...lvDraft, source: "manual upload", updatedAt: serverTimestamp(), errors: [] }, { merge: true });
+      const pub = { updatedAt: serverTimestamp() };
+      if (lvDraft.nifty) pub.nifty = basicLevels(lvDraft.nifty);
+      if (lvDraft.sensex) pub.sensex = basicLevels(lvDraft.sensex);
+      await setDoc(doc(db, "levels", "public"), pub, { merge: true });
       flash($("lvMsg"), "Saved. Members see the new levels now.");
       $("lvSave").disabled = true;
       loadLevels();

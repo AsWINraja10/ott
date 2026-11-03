@@ -248,7 +248,7 @@
   }
 
   // Triangle levels (written daily by the auto-fetch job)
-  let levels = null, triIx = "nifty";
+  let levels = null, triIx = "nifty", triBasic = true;
   function drawTriangle() {
     document.querySelectorAll("[data-ix]").forEach(b => b.setAttribute("aria-selected", b.dataset.ix === triIx));
     const L = levels && levels[triIx];
@@ -258,7 +258,7 @@
       return;
     }
     $("triMeta").textContent = `${L.index} · levels for ${fmtIsoDate(L.forDate || L.tradeDate)} · from ${fmtIsoDate(L.tradeDate)} settlement (yesterday) · expiry ${fmtIsoDate(L.expiry)} · step ${L.step}`;
-    $("triBox").innerHTML = renderTriangle(L);
+    $("triBox").innerHTML = renderTriangle(L, { basic: triBasic });
     if (location.hash === "#triangle") $("triCard").scrollIntoView({ block: "start" });
   }
   document.querySelectorAll("[data-ix]").forEach(b => b.onclick = () => { triIx = b.dataset.ix; drawTriangle(); });
@@ -273,10 +273,19 @@
   async function loadTriangle() {
     if (triWatching) return;
     triWatching = true;
+    // Members & admins may read the full levels; free users are refused by the rules
+    // and get the trimmed copy (triangle only).
     onSnapshot(doc(db, "levels", "latest"), async s => {
+      triBasic = false;
       levels = s.exists() ? s.data() : await localLevels();
       drawTriangle();
-    }, async () => { levels = await localLevels(); drawTriangle(); });
+    }, () => {
+      triBasic = true;
+      onSnapshot(doc(db, "levels", "public"), s => {
+        levels = s.exists() ? s.data() : null;
+        drawTriangle();
+      }, () => { levels = null; drawTriangle(); });
+    });
   }
 
   async function renderMember() {

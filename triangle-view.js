@@ -13,7 +13,7 @@ export function fmtIsoDate(s) {
   return isNaN(d) ? s : d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 
-export function renderTriangle(L) {
+export function renderTriangle(L, opts = {}) {
   if (!L || !L.atm) return `<p class="muted">Levels are not available yet.</p>`;
 
   // ---------- SVG geometry ----------
@@ -73,6 +73,12 @@ export function renderTriangle(L) {
   <text x="${cx + halfBase + 4}" y="${wideY + 30}" class="tr-t tr-b tr-pec" text-anchor="end">${k(L.wide.pe.strike)} PE</text>
   <text x="${cx + halfBase + 4}" y="${wideY + 52}" class="tr-t tr-s" text-anchor="end">IV ${f(L.wide.pe.iv, 1)}  ·  <tspan class="tr-m">PDC ${f(L.wide.pe.pdc)}</tspan></text>
 </svg>`;
+
+  // Free users: the triangle only (no chips, range table, PDH/PDL, HL BEP or ladder)
+  if (opts.basic) {
+    return `<div class="tr-wrap">${svg}</div>` +
+      `<p class="tr-upsell">⭐ Members also get ATM PDH / PDL, Highest High / Lowest Low, HL BEP and the full strike ladder.</p>`;
+  }
 
   // ---------- summary chips ----------
   const chips = `
@@ -155,4 +161,5 @@ export const TRIANGLE_CSS = `
 .tr-table tr.t-atm td:first-child{color:var(--accent,#c8952e)}
 .tr-table tr.t-atm,.tr-table tr.t-short,.tr-table tr.t-wide{background:var(--tr-row,rgba(18,53,91,.04))}
 .tr-ladder summary{cursor:pointer;font-weight:700;padding:8px 0}
+.tr-upsell{margin:12px 0 0;padding:10px 12px;border-radius:10px;background:var(--warn-bg,#fdf1dc);font-size:.9rem;text-align:center}
 `;

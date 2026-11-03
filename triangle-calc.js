@@ -228,3 +228,11 @@ export function computeLevels(rows, indexName, opts = {}) {
     hl
   });
 }
+
+// Trimmed levels for free users: only what the triangle drawing needs
+// (no PDH/PDL, HH/LL, HL BEP or ladder). Saved as levels/public.
+export function basicLevels(L) {
+  if (!L) return null;
+  const { index, exchange, tradeDate, forDate, expiry, step, atm, cePdc, pePdc, synBase, rounded, wideMult, short, wide } = L;
+  return { index, exchange, tradeDate, forDate, expiry, step, atm, cePdc, pePdc, synBase, rounded, wideMult, short, wide };
+}
