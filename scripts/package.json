@@ -1,0 +1,14 @@
+{
+  "name": "ott-daily-levels",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "local": "node fetch-levels.mjs --local",
+    "dry": "node fetch-levels.mjs --dry",
+    "fetch": "node fetch-levels.mjs"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "firebase-admin": "12.7.0"
+  }
+}
