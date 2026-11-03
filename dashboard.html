@@ -257,7 +257,7 @@
       $("triBox").innerHTML = "";
       return;
     }
-    $("triMeta").textContent = `${L.index} · levels for ${fmtIsoDate(L.forDate || L.tradeDate)} · from ${fmtIsoDate(L.tradeDate)} settlement (yesterday) · expiry ${fmtIsoDate(L.expiry)} · step ${L.step}`;
+    $("triMeta").textContent = `${L.index} · levels for ${fmtIsoDate(L.forDate || L.tradeDate)} · from ${fmtIsoDate(L.tradeDate)} settlement · expiry ${fmtIsoDate(L.expiry)} · step ${L.step}`;
     $("triBox").innerHTML = renderTriangle(L, { basic: triBasic });
     if (location.hash === "#triangle") $("triCard").scrollIntoView({ block: "start" });
   }
