@@ -1,0 +1,29 @@
+name: Daily triangle levels (NIFTY & SENSEX)
+
+on:
+  schedule:
+    # After NSE/BSE publish the day's settlement (bhavcopy, usually by ~6 pm IST):
+    # 6:40 pm and 8:40 pm IST (retry), Monday–Friday → next session's levels.
+    # 8:10 am IST Monday–Friday as a backup in case the evening files were late.
+    - cron: "10 13 * * 1-5"
+    - cron: "10 15 * * 1-5"
+    - cron: "40 2 * * 1-5"
+  workflow_dispatch: {}   # "Run workflow" button for a manual refresh
+
+jobs:
+  levels:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install
+        working-directory: scripts
+        run: npm install --no-audit --no-fund
+      - name: Fetch bhavcopy and save levels
+        working-directory: scripts
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node fetch-levels.mjs
