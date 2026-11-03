@@ -22,56 +22,40 @@ export function renderTriangle(L, opts = {}) {
   const xAt = y => halfBase * (y - apexY) / (wideY - apexY);
   const sx = xAt(shortY);
 
-  // ladder ticks along both sides
-  const steps = Math.max(1, Math.round(L.wide.width / L.step));
-  let ticks = "";
-  for (let i = 1; i < steps; i++) {
-    const y = apexY + (wideY - apexY) * (i / steps);
-    if (Math.abs(y - shortY) < 2) continue;
-    const dx = xAt(y);
-    ticks += `<line x1="${cx - dx - 6}" y1="${y}" x2="${cx - dx + 6}" y2="${y}" class="tr-tick"/><line x1="${cx + dx - 6}" y1="${y}" x2="${cx + dx + 6}" y2="${y}" class="tr-tick"/>`;
-  }
-
+  // Simple triangle: apex = ATM + Syn PDC, corners = strike + IV, lines = ranges
   const svg = `
-<svg class="tri" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(L.index)} triangle: ATM ${L.atm}, short ${L.short.ce.strike} to ${L.short.pe.strike}, wide ${L.wide.ce.strike} to ${L.wide.pe.strike}">
+<svg class="tri" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(L.index)} triangle: ATM ${L.atm}, Syn PDC ${f(L.synBase, 1)}, short ${L.short.ce.strike} to ${L.short.pe.strike}, wide ${L.wide.ce.strike} to ${L.wide.pe.strike}">
   <polygon points="${cx},${apexY} ${cx - halfBase},${wideY} ${cx + halfBase},${wideY}" class="tr-fill"/>
   <polygon points="${cx},${apexY} ${cx - sx},${shortY} ${cx + sx},${shortY}" class="tr-fill2"/>
   <line x1="${cx}" y1="${apexY}" x2="${cx - halfBase}" y2="${wideY}" class="tr-ce"/>
   <line x1="${cx}" y1="${apexY}" x2="${cx + halfBase}" y2="${wideY}" class="tr-pe"/>
-  ${ticks}
   <line x1="${cx - sx}" y1="${shortY}" x2="${cx + sx}" y2="${shortY}" class="tr-short"/>
   <line x1="${cx - halfBase}" y1="${wideY}" x2="${cx + halfBase}" y2="${wideY}" class="tr-wide"/>
-  <line x1="${cx}" y1="${apexY + 12}" x2="${cx}" y2="${wideY}" class="tr-axis"/>
 
-  <!-- apex: ATM -->
+  <!-- apex: ATM strike + synthetic PDC -->
   <circle cx="${cx}" cy="${apexY}" r="8" class="tr-dot-atm"/>
   <text x="${cx}" y="${apexY - 44}" class="tr-t tr-b" text-anchor="middle">ATM ${k(L.atm)}</text>
-  <text x="${cx}" y="${apexY - 22}" class="tr-t tr-s" text-anchor="middle"><tspan class="tr-cec">CE ${f(L.cePdc)}</tspan>  ·  <tspan class="tr-pec">PE ${f(L.pePdc)}</tspan></text>
+  <text x="${cx}" y="${apexY - 20}" class="tr-t tr-s" text-anchor="middle">Syn PDC ${f(L.synBase, 1)}</text>
 
-  <!-- range labels -->
-  <text x="${cx}" y="${shortY - 12}" class="tr-t tr-rng" text-anchor="middle">Short range ${k(L.short.range)} pts</text>
-  <text x="${cx}" y="${shortY + 22}" class="tr-t tr-s tr-m" text-anchor="middle">±${k(L.short.width)}</text>
-  <text x="${cx}" y="${wideY - 12}" class="tr-t tr-rng" text-anchor="middle">Wide range ${k(L.wide.range)} pts</text>
-  <text x="${cx}" y="${wideY + 22}" class="tr-t tr-s tr-m" text-anchor="middle">±${k(L.wide.width)} (×${L.wideMult})</text>
-  <text x="${cx}" y="${(shortY + wideY) / 2 + 8}" class="tr-t tr-xs tr-m" text-anchor="middle">Syn PDC ${f(L.synBase, 1)}</text>
+  <!-- ranges -->
+  <text x="${cx}" y="${shortY - 12}" class="tr-t tr-rng" text-anchor="middle">Short range ${k(L.short.range)}</text>
+  <text x="${cx}" y="${wideY - 12}" class="tr-t tr-rng" text-anchor="middle">Wide range ${k(L.wide.range)}</text>
 
-  <!-- short vertices -->
+  <!-- short corners -->
   <circle cx="${cx - sx}" cy="${shortY}" r="7" class="tr-dot-ce"/>
   <circle cx="${cx + sx}" cy="${shortY}" r="7" class="tr-dot-pe"/>
-  <text x="${cx - sx - 36}" y="${shortY - 8}" class="tr-t tr-b tr-cec" text-anchor="end">${k(L.short.ce.strike)} CE</text>
-  <text x="${cx - sx - 36}" y="${shortY + 14}" class="tr-t tr-s" text-anchor="end">IV ${f(L.short.ce.iv, 1)}</text>
-  <text x="${cx - sx - 36}" y="${shortY + 34}" class="tr-t tr-xs tr-m" text-anchor="end">PDC ${f(L.short.ce.pdc)}</text>
-  <text x="${cx + sx + 36}" y="${shortY - 8}" class="tr-t tr-b tr-pec">${k(L.short.pe.strike)} PE</text>
-  <text x="${cx + sx + 36}" y="${shortY + 14}" class="tr-t tr-s">IV ${f(L.short.pe.iv, 1)}</text>
-  <text x="${cx + sx + 36}" y="${shortY + 34}" class="tr-t tr-xs tr-m">PDC ${f(L.short.pe.pdc)}</text>
+  <text x="${cx - sx - 36}" y="${shortY - 2}" class="tr-t tr-b tr-cec" text-anchor="end">${k(L.short.ce.strike)} CE</text>
+  <text x="${cx - sx - 36}" y="${shortY + 20}" class="tr-t tr-s" text-anchor="end">IV ${f(L.short.ce.iv, 1)}</text>
+  <text x="${cx + sx + 36}" y="${shortY - 2}" class="tr-t tr-b tr-pec">${k(L.short.pe.strike)} PE</text>
+  <text x="${cx + sx + 36}" y="${shortY + 20}" class="tr-t tr-s">IV ${f(L.short.pe.iv, 1)}</text>
 
-  <!-- wide vertices -->
+  <!-- wide corners -->
   <circle cx="${cx - halfBase}" cy="${wideY}" r="7" class="tr-dot-ce"/>
   <circle cx="${cx + halfBase}" cy="${wideY}" r="7" class="tr-dot-pe"/>
   <text x="${cx - halfBase - 4}" y="${wideY + 30}" class="tr-t tr-b tr-cec">${k(L.wide.ce.strike)} CE</text>
-  <text x="${cx - halfBase - 4}" y="${wideY + 52}" class="tr-t tr-s">IV ${f(L.wide.ce.iv, 1)}  ·  <tspan class="tr-m">PDC ${f(L.wide.ce.pdc)}</tspan></text>
+  <text x="${cx - halfBase - 4}" y="${wideY + 52}" class="tr-t tr-s">IV ${f(L.wide.ce.iv, 1)}</text>
   <text x="${cx + halfBase + 4}" y="${wideY + 30}" class="tr-t tr-b tr-pec" text-anchor="end">${k(L.wide.pe.strike)} PE</text>
-  <text x="${cx + halfBase + 4}" y="${wideY + 52}" class="tr-t tr-s" text-anchor="end">IV ${f(L.wide.pe.iv, 1)}  ·  <tspan class="tr-m">PDC ${f(L.wide.pe.pdc)}</tspan></text>
+  <text x="${cx + halfBase + 4}" y="${wideY + 52}" class="tr-t tr-s" text-anchor="end">IV ${f(L.wide.pe.iv, 1)}</text>
 </svg>`;
 
   // Free users: the triangle only (no chips, range table, PDH/PDL, HL BEP or ladder)
