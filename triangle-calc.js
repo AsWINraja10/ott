@@ -13,7 +13,8 @@ export const INDEX_SETTINGS = {
 export const DEFAULTS = {
   scanN: 3,              // Auto Scan ± strikes around the underlying close
   wideMult: 2,           // Wide range = (PDC Avg × N) rounded to the strike step
-  roundMode: "Nearest",  // Nearest | Up | Down
+  roundMode: "Nearest",  // Short range: PDC Avg rounded Nearest | Up | Down  (186.2 → 200, 115.6 → 100)
+  wideRoundMode: "Up",   // Wide range: (PDC Avg × N) rounded UP to the next strike (372.4 → 400, 231.2 → 250)
   priceField: "settlement", // settlement | close  (settlement falls back to close when 0)
   ladderMax: 30          // max ladder rows (ATM → Wide)
 };
@@ -162,16 +163,16 @@ export function computeLevels(rows, indexName, opts = {}) {
   const pdcAvg = (cP + pP) / 2;
   const synBase = atm + (cP - pP);
   // Round a raw width to the strike step (Nearest / Up / Down)
-  const roundStep = v => {
+  const roundStep = (v, mode = cfg.roundMode) => {
     const x = v / step;
-    const n = cfg.roundMode === "Up" ? Math.ceil(x) : cfg.roundMode === "Down" ? Math.floor(x) : Math.round(x);
+    const n = mode === "Up" ? Math.ceil(x - 1e-9) : mode === "Down" ? Math.floor(x + 1e-9) : Math.round(x);
     return Math.max(n * step, step);
   };
   // Short = PDC Avg rounded (e.g. 115.6 → 100)
   const pdcRnd = cfg.manualRounded > 0 ? cfg.manualRounded : roundStep(pdcAvg);
 
-  // Wide = (PDC Avg × N) rounded, not Short × N (e.g. 115.6 + 115.6 = 231.2 → 250)
-  const shortW = pdcRnd, wideW = cfg.manualRounded > 0 ? pdcRnd * cfg.wideMult : roundStep(pdcAvg * cfg.wideMult);
+  // Wide = (PDC Avg × N) rounded UP, not Short × N (e.g. 115.6 × 2 = 231.2 → 250, 186.2 × 2 = 372.4 → 400)
+  const shortW = pdcRnd, wideW = cfg.manualRounded > 0 ? pdcRnd * cfg.wideMult : roundStep(pdcAvg * cfg.wideMult, cfg.wideRoundMode);
   const priceOf = (k, t) => { const b = book.get(k); return b && b[t] ? b[t].price : null; };
 
   const leg = (w) => {
