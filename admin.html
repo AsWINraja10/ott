@@ -188,11 +188,12 @@
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const $ = id => document.getElementById(id);
-  let users = [];
+  let users = [], meUid = null;
 
   $("logoutBtn").onclick = async () => { try { const m = await import("./pwa.js"); await m.removeDeviceToken(); } catch {} await signOut(auth); location.replace("login.html"); };
 
   onAuthStateChanged(auth, async user => {
+    meUid = user ? user.uid : null;
     if (!user) return location.replace("login.html");
     $("who").textContent = user.email;
     let ok = false;
@@ -265,7 +266,8 @@
             <option value="3">3 months</option><option value="6">6 months</option><option value="12">12 months</option>
           </select>
           <button class="btn sm primary" data-act="activate">${isMem ? "Extend" : "Activate"}</button>
-          ${isMem || s === "expired" ? `<button class="btn sm danger" data-act="deactivate">Deactivate</button>` : ""}
+          ${isMem || s === "expired" ? `<button class="btn sm danger" data-act="deactivate" title="Ends membership now; the user stays as a free user">Remove membership</button>` : ""}
+          ${u.id !== meUid ? `<button class="btn sm danger" data-act="delete" title="Removes this user and their details from the list">🗑 Delete user</button>` : ""}
         </div></td>
       </tr>`;
     }).join("");
@@ -299,6 +301,17 @@
         renderUsers();
         flash($("uMsg"), `Membership for ${u.name} active until ${fmtDate(end)}.`);
       } catch (err) { btn.disabled = false; flash($("uMsg"), "Failed: " + err.message, "err"); }
+    }
+
+    if (btn.dataset.act === "delete") {
+      if (!confirm(`Delete ${u.name} (${u.email}, +91 ${u.mobile})?\n\nTheir membership and details are removed from your list. This cannot be undone.`)) return;
+      try {
+        await deleteDoc(doc(db, "users", id));
+        users = users.filter(x => x.id !== id);
+        renderUsers();
+        flash($("uMsg"), `${u.name} deleted.`);
+      } catch (err) { flash($("uMsg"), "Failed: " + err.message, "err"); }
+      return;
     }
 
     if (btn.dataset.act === "deactivate") {
