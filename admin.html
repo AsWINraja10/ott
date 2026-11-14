@@ -36,8 +36,8 @@
     <div class="stats">
       <div class="stat"><span class="muted small">Total users</span><b id="sTotal">0</b></div>
       <div class="stat"><span class="muted small">Active members</span><b id="sActive">0</b></div>
-      <div class="stat"><span class="muted small">🟢 Basic ₹2,500</span><b id="sBasic">0</b></div>
-      <div class="stat"><span class="muted small">🔵 Triangle ₹5,000</span><b id="sTri">0</b></div>
+      <div class="stat"><span class="muted small">🟢 Level 1 – Basic</span><b id="sBasic">0</b></div>
+      <div class="stat"><span class="muted small">🔵 Level 2 – Triangle</span><b id="sTri">0</b></div>
       <div class="stat"><span class="muted small">Expiring in 5 days</span><b id="sExpiring">0</b></div>
       <div class="stat"><span class="muted small">Not yet in community</span><b id="sCommunity">0</b></div>
     </div>
@@ -50,8 +50,8 @@
         <select id="filter">
           <option value="all">All users</option>
           <option value="active">Active members</option>
-          <option value="basic">🟢 Basic members</option>
-          <option value="triangle">🔵 Triangle members</option>
+          <option value="basic">🟢 Level 1 – Basic members</option>
+          <option value="triangle">🔵 Level 2 – Triangle members</option>
           <option value="expiring">Expiring in 5 days</option>
           <option value="expired">Expired members</option>
           <option value="free">Free (never member)</option>
@@ -146,17 +146,17 @@
             </label>
           </div>
         </div>
-        <p class="small muted">Shown to both plans (Basic &amp; Triangle).</p>
+        <p class="small muted">Shown to both levels (Level 1 – Basic &amp; Level 2 – Triangle).</p>
         <button class="btn primary">Save member content</button>
         <p id="mMsg" class="msg"></p>
       </form>
     </section>
 
     <!-- ===== TRIANGLE PLAN CONTENT ===== -->
-    <h2 class="section-title">🔵 Triangle plan — case study</h2>
+    <h2 class="section-title">🔵 Level 2 – Triangle — case study</h2>
     <section class="card">
       <form id="triForm">
-        <p class="small muted">Only Triangle (₹5,000) members see this. Monthly 2 times case study &amp; experience sharing.</p>
+        <p class="small muted">Only Level 2 – Triangle members see this. Monthly 2 times case study &amp; experience sharing.</p>
         <div class="grid">
           <div>
             <label>Case study title
@@ -216,7 +216,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script type="module">
-  import { auth, db, SITE, PLANS, planOf, rupees, esc, fmtDate, fmtDateTime, memberUntil, isActiveMember, daysLeft } from "./firebase-config.js";
+  import { auth, db, SITE, PLANS, planOf, esc, fmtDate, fmtDateTime, memberUntil, isActiveMember, daysLeft } from "./firebase-config.js";
   import { parseCsv, computeLevels, basicLevels } from "./triangle-calc.js";
   import { renderTriangle, TRIANGLE_CSS, fmtIsoDate } from "./triangle-view.js";
   import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -294,7 +294,7 @@
         free: `<span class="badge plain">Free</span>`
       }[s];
       const P = PLANS[planOf(u)];
-      const planTag = s === "free" ? "" : `<br><span class="small"><b>${P.icon} ${P.name}</b> · ${rupees(P.price)}/mo</span>`;
+      const planTag = s === "free" ? "" : `<br><span class="small"><b>${P.icon} ${P.label}</b></span>`;
       const wa = `https://wa.me/91${encodeURIComponent(u.mobile || "")}`;
       const isMem = s === "active" || s === "expiring";
       return `<tr data-id="${esc(u.id)}">
@@ -305,8 +305,8 @@
         <td data-l="Community"><label class="check" style="margin:0"><input type="checkbox" data-act="community" ${u.communityAdded ? "checked" : ""}> <span class="small">Added${u.wantsCommunity === false ? " (opted out)" : ""}</span></label></td>
         <td data-l="Actions"><div class="row-actions">
           <select data-role="plan" aria-label="Plan">
-            <option value="basic" ${s !== "free" && planOf(u) === "basic" ? "selected" : ""}>🟢 Basic ₹2,500</option>
-            <option value="triangle" ${s === "free" || planOf(u) === "triangle" ? "selected" : ""}>🔵 Triangle ₹5,000</option>
+            <option value="basic" ${s !== "free" && planOf(u) === "basic" ? "selected" : ""}>🟢 Level 1 – Basic</option>
+            <option value="triangle" ${s === "free" || planOf(u) === "triangle" ? "selected" : ""}>🔵 Level 2 – Triangle</option>
           </select>
           <select data-role="months" aria-label="Months">
             <option value="1">1 month</option><option value="2">2 months</option>
@@ -340,7 +340,7 @@
       const base = isActiveMember(u) ? memberUntil(u) : new Date();
       const end = new Date(base.getTime() + days * 86400000);
       end.setHours(23, 59, 59, 0);
-      if (!confirm(`${isActiveMember(u) ? "Extend" : "Activate"} membership for ${u.name}\n+91 ${u.mobile}\n\nPlan: ${P.name} (${rupees(P.price)}/month × ${months} = ${rupees(P.price * months)})\nNew end date: ${fmtDate(end)}`)) return;
+      if (!confirm(`${isActiveMember(u) ? "Extend" : "Activate"} membership for ${u.name}\n+91 ${u.mobile}\n\nPlan: ${P.label} · ${months} month${months > 1 ? "s" : ""}\nNew end date: ${fmtDate(end)}`)) return;
       btn.disabled = true;
       try {
         const patch = { memberUntil: Timestamp.fromDate(end), plan, lastActivatedAt: serverTimestamp(), lastActivatedDays: days };
@@ -348,19 +348,19 @@
         await updateDoc(doc(db, "users", id), patch);
         Object.assign(u, { memberUntil: Timestamp.fromDate(end), plan });
         renderUsers();
-        flash($("uMsg"), `${P.name} membership for ${u.name} active until ${fmtDate(end)}.`);
+        flash($("uMsg"), `${P.label} membership for ${u.name} active until ${fmtDate(end)}.`);
       } catch (err) { btn.disabled = false; flash($("uMsg"), "Failed: " + err.message, "err"); }
     }
 
     if (btn.dataset.act === "plan") {
       const plan = tr.querySelector('[data-role="plan"]').value, P = PLANS[plan];
-      if (plan === planOf(u)) return flash($("uMsg"), `${u.name} is already on ${P.name}. Pick the other plan in the list first.`, "err");
-      if (!confirm(`Change ${u.name} to ${P.name} (${rupees(P.price)}/month)?\nEnd date stays ${fmtDate(memberUntil(u))}.`)) return;
+      if (plan === planOf(u)) return flash($("uMsg"), `${u.name} is already on ${P.label}. Pick the other plan in the list first.`, "err");
+      if (!confirm(`Change ${u.name} to ${P.label}?\nEnd date stays ${fmtDate(memberUntil(u))}.`)) return;
       try {
         await updateDoc(doc(db, "users", id), { plan });
         u.plan = plan;
         renderUsers();
-        flash($("uMsg"), `${u.name} is now on the ${P.name} plan.`);
+        flash($("uMsg"), `${u.name} is now on ${P.label}.`);
       } catch (err) { flash($("uMsg"), "Failed: " + err.message, "err"); }
       return;
     }

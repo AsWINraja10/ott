@@ -28,12 +28,11 @@ export const SITE = {
 
 // Membership plans (activated by the admin; no online payment)
 export const PLANS = {
-  basic:    { key: "basic",    name: "Basic",    level: 1, price: 2500, icon: "🟢" },
-  triangle: { key: "triangle", name: "Triangle", level: 2, price: 5000, icon: "🔵" }
+  basic:    { key: "basic",    name: "Basic",    level: 1, label: "Level 1 – Basic",    icon: "🟢" },
+  triangle: { key: "triangle", name: "Triangle", level: 2, label: "Level 2 – Triangle", icon: "🔵" }
 };
 // Members activated before the plans existed have no "plan" field → Triangle (full access)
 export function planOf(user) { return user && user.plan === "basic" ? "basic" : "triangle"; }
-export const rupees = n => "₹" + Number(n).toLocaleString("en-IN");
 
 // false until the real keys are pasted above
 export const firebaseReady = !String(firebaseConfig.apiKey).startsWith("PASTE");

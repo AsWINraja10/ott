@@ -61,7 +61,7 @@ export function renderTriangle(L, opts = {}) {
   // Free users: the triangle only (no chips, range table, PDH/PDL, HL BEP or ladder)
   if (opts.basic) {
     return `<div class="tr-wrap">${svg}</div>` +
-      `<p class="tr-upsell">🔵 Triangle plan (₹5,000/month) also gets the triangle levels calculation, edge levels, wide levels analysis, HL BEP and the full strike ladder.</p>`;
+      `<p class="tr-upsell">🔵 Level 2 – Triangle membership also gets the triangle levels calculation, edge levels, wide levels analysis, HL BEP and the full strike ladder.</p>`;
   }
 
   // ---------- summary chips ----------

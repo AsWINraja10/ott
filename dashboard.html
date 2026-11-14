@@ -18,8 +18,6 @@
     .plan { border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
     .plan.hi { border-color: #2f6fd6; box-shadow: 0 0 0 2px rgba(47,111,214,.15); }
     .plan h3 { margin: 0; font-size: 1.05rem; }
-    .plan .price { font-size: 1.5rem; font-weight: 800; }
-    .plan .price small { font-size: .85rem; font-weight: 600; color: var(--muted); }
     .plan .list { flex: 1; }
     .plan .btn { text-align: center; }
     .cmp { min-width: 0; } .cmp td:not(:first-child), .cmp th:not(:first-child) { text-align: center; width: 70px; padding-left: 4px; padding-right: 4px; }
@@ -118,7 +116,7 @@
 
         <!-- Basic plan only -->
         <div class="card span" id="upgradeCard" hidden>
-          <h2>🔵 Upgrade to Triangle membership</h2>
+          <h2>🔵 Upgrade to Level 2 – Triangle</h2>
           <div id="upgradeBox"></div>
         </div>
       </div>
@@ -159,7 +157,7 @@
 </main>
 
 <script type="module">
-  import { firebaseReady, auth, db, SITE, PLANS, planOf, rupees, esc, fmtDate, fmtDateTime, memberUntil, isActiveMember, daysLeft, safeUrl, ytEmbed } from "./firebase-config.js";
+  import { firebaseReady, auth, db, SITE, PLANS, planOf, esc, fmtDate, fmtDateTime, memberUntil, isActiveMember, daysLeft, safeUrl, ytEmbed } from "./firebase-config.js";
   import { renderTriangle, TRIANGLE_CSS, fmtIsoDate } from "./triangle-view.js";
   import { mountAppBar, removeDeviceToken } from "./pwa.js";
   import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -238,9 +236,9 @@
 
     if (active) {
       const left = daysLeft(u), P = PLANS[planOf(u)];
-      $("statusBadge").textContent = `${P.icon} ${P.name} member`;
+      $("statusBadge").textContent = `${P.icon} ${P.label}`;
       $("statusBadge").className = "badge " + (left <= 5 ? "warn" : "ok");
-      $("statusLine").textContent = `${P.name} membership (${rupees(P.price)}/month) active until ${fmtDate(until)} · ${left} day${left === 1 ? "" : "s"} left` +
+      $("statusLine").textContent = `${P.label} membership active until ${fmtDate(until)} · ${left} day${left === 1 ? "" : "s"} left` +
         (left <= 5 ? " — message us on WhatsApp to renew." : "");
       $("memberView").hidden = false;
       renderMember(u);
@@ -278,7 +276,7 @@
   const PLAN_PERKS = {
     basic: ["Daily Morning Pre-Market Analysis Video", "Triangle Pattern Range Concept Based Analysis",
             "TradingView access: Weekly Futures Chart, Meeting Point Indicator, Triangle Levels"],
-    triangle: ["Everything in Level 1 (Basic)", "Triangle Levels Calculation", "Triangle Range Concept",
+    triangle: ["Everything in Level 1 – Basic", "Triangle Levels Calculation", "Triangle Range Concept",
                "Triangle Edge Level", "Wide Levels",
                "Exclusive: Triangle Level Case Study — monthly 2 times market case study & experience sharing"]
   };
@@ -294,7 +292,7 @@
     "நிர்வாகம் ஏற்படுத்தும் மாற்றங்களுக்கு உட்பட விருப்பம் உள்ளவர்கள் மட்டுமே Membership-ல் இணைய வேண்டும்."
   ];
   function requestLink(u, P, upgrade) {
-    const text = `Hi OTT, I want to ${upgrade ? "upgrade to" : "join"} the ${P.name.toUpperCase()} membership (Level ${P.level} – ${rupees(P.price)}/month).\nName: ${u.name}\nEmail: ${u.email}\nMobile: ${u.mobile}`;
+    const text = `Hi OTT, I want to ${upgrade ? "upgrade to" : "join"} the LEVEL ${P.level} – ${P.name.toUpperCase()} membership.\nName: ${u.name}\nEmail: ${u.email}\nMobile: ${u.mobile}`;
     return `https://wa.me/${SITE.ownerWhatsApp}?text=${encodeURIComponent(text)}`;
   }
   // only: "triangle" → just the upgrade offer for Basic members
@@ -303,13 +301,12 @@
     const cards = keys.map(k => { const P = PLANS[k]; return `
       <div class="plan ${k === "triangle" ? "hi" : ""}">
         <h3>${P.icon} Level ${P.level} – ${P.name.toUpperCase()}</h3>
-        <div class="price">${rupees(P.price)} <small>/ month</small></div>
         <ul class="list perks">${PLAN_PERKS[k].map(x => `<li>${esc(x)}</li>`).join("")}</ul>
-        <a class="btn ${k === "triangle" ? "primary" : "wa"}" href="${esc(requestLink(u, P, !!only))}" target="_blank" rel="noopener">${only ? "Request upgrade" : "Join " + P.name} on WhatsApp</a>
+        <a class="btn ${k === "triangle" ? "primary" : "wa"}" href="${esc(requestLink(u, P, !!only))}" target="_blank" rel="noopener">${only ? "Request upgrade" : "Join Level " + P.level} on WhatsApp</a>
       </div>`; }).join("");
     const table = only ? "" : `
       <div class="table-wrap"><table class="cmp">
-        <thead><tr><th>Features</th><th>Basic</th><th>Triangle</th></tr></thead>
+        <thead><tr><th>Features</th><th>Level 1<br>Basic</th><th>Level 2<br>Triangle</th></tr></thead>
         <tbody>${FEATURES.map(([f, lv]) => `<tr><td>${esc(f)}</td><td>${lv === 1 ? "✅" : "❌"}</td><td>✅</td></tr>`).join("")}</tbody>
       </table></div>`;
     return `<div class="plans">${cards}</div>${table}
