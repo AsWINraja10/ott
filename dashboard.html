@@ -13,6 +13,22 @@
   <meta name="apple-mobile-web-app-title" content="OTT">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="stylesheet" href="auth.css">
+  <style>
+    .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 6px 0 14px; }
+    .plan { border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .plan.hi { border-color: #2f6fd6; box-shadow: 0 0 0 2px rgba(47,111,214,.15); }
+    .plan h3 { margin: 0; font-size: 1.05rem; }
+    .plan .price { font-size: 1.5rem; font-weight: 800; }
+    .plan .price small { font-size: .85rem; font-weight: 600; color: var(--muted); }
+    .plan .list { flex: 1; }
+    .plan .btn { text-align: center; }
+    .cmp { min-width: 0; } .cmp td:not(:first-child), .cmp th:not(:first-child) { text-align: center; width: 70px; padding-left: 4px; padding-right: 4px; }
+    .terms { margin-top: 12px; font-size: .88rem; }
+    .terms summary { cursor: pointer; font-weight: 700; }
+    .terms ul { margin: 8px 0 0; padding-left: 18px; }
+    .terms li { margin: 4px 0; }
+    .no-calls { margin-top: 10px; font-size: .8rem; font-weight: 700; letter-spacing: .03em; color: var(--muted); }
+  </style>
 </head>
 <body>
 <header class="topbar">
@@ -84,13 +100,26 @@
         </div>
 
         <div class="card">
-          <h2>📈 Member indicators</h2>
-          <p class="muted small">Exclusive TradingView indicators for members.</p>
+          <h2>📈 TradingView access</h2>
+          <p class="muted small">Weekly Futures Chart, Meeting Point Indicator &amp; Triangle Levels — while your membership is active.</p>
           <div class="actions" id="indicatorBtns"></div>
 
           <h2 style="margin-top:20px">💬 Members WhatsApp group</h2>
           <p class="muted small">Private group for active members only.</p>
           <div class="actions" id="memberGroupBtn"></div>
+        </div>
+
+        <!-- Triangle plan only -->
+        <div class="card span" id="caseCard" hidden>
+          <h2>⭐ Triangle level case study</h2>
+          <p class="muted small">Monthly 2 times — market case study &amp; experience sharing: triangle levels vs market movement, edge level behaviour, wide levels analysis, calculated levels vs actual movement.</p>
+          <div id="caseBox"></div>
+        </div>
+
+        <!-- Basic plan only -->
+        <div class="card span" id="upgradeCard" hidden>
+          <h2>🔵 Upgrade to Triangle membership</h2>
+          <div id="upgradeBox"></div>
         </div>
       </div>
     </section>
@@ -104,16 +133,9 @@
           <div class="actions" id="communityBtn"></div>
         </div>
 
-        <div class="card">
-          <h2>⭐ Become a member</h2>
-          <ul class="list perks">
-            <li>Daily morning market probability video before open</li>
-            <li>Live-market hints during trading hours</li>
-            <li>Meeting Point Indicator &amp; Weekly Chart Indicator (TradingView)</li>
-            <li>Private members WhatsApp group</li>
-          </ul>
-          <p class="muted small" style="margin-top:10px">Monthly membership is activated by the OTT team. Message us on WhatsApp to join.</p>
-          <div class="actions"><a class="btn wa" id="requestBtn" target="_blank" rel="noopener">Request membership on WhatsApp</a></div>
+        <div class="card span">
+          <h2>🔺 Choose your membership level</h2>
+          <div id="plansBox"></div>
         </div>
 
         <div class="card span" id="freeVideoCard" hidden>
@@ -137,7 +159,7 @@
 </main>
 
 <script type="module">
-  import { firebaseReady, auth, db, SITE, esc, fmtDate, fmtDateTime, memberUntil, isActiveMember, daysLeft, safeUrl, ytEmbed } from "./firebase-config.js";
+  import { firebaseReady, auth, db, SITE, PLANS, planOf, rupees, esc, fmtDate, fmtDateTime, memberUntil, isActiveMember, daysLeft, safeUrl, ytEmbed } from "./firebase-config.js";
   import { renderTriangle, TRIANGLE_CSS, fmtIsoDate } from "./triangle-view.js";
   import { mountAppBar, removeDeviceToken } from "./pwa.js";
   import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -215,19 +237,19 @@
     mountAppBar($("appBar"), { user: currentUser });
 
     if (active) {
-      const left = daysLeft(u);
-      $("statusBadge").textContent = "★ Member";
+      const left = daysLeft(u), P = PLANS[planOf(u)];
+      $("statusBadge").textContent = `${P.icon} ${P.name} member`;
       $("statusBadge").className = "badge " + (left <= 5 ? "warn" : "ok");
-      $("statusLine").textContent = `Membership active until ${fmtDate(until)} · ${left} day${left === 1 ? "" : "s"} left` +
+      $("statusLine").textContent = `${P.name} membership (${rupees(P.price)}/month) active until ${fmtDate(until)} · ${left} day${left === 1 ? "" : "s"} left` +
         (left <= 5 ? " — message us on WhatsApp to renew." : "");
       $("memberView").hidden = false;
-      renderMember();
+      renderMember(u);
     } else {
       $("statusBadge").textContent = until ? "Membership expired" : "Free account";
       $("statusBadge").className = "badge " + (until ? "bad" : "plain");
       $("statusLine").textContent = until
         ? `Your membership ended on ${fmtDate(until)}. Message us to renew.`
-        : "You have a free account. Upgrade to membership for daily videos and live hints.";
+        : "You have a free account. Choose a membership plan below for daily videos and triangle analysis.";
       $("normalView").hidden = false;
 
       const community = safeUrl(pub.communityLink);
@@ -235,8 +257,7 @@
         ? `<a class="btn wa" href="${esc(community)}" target="_blank" rel="noopener">Join WhatsApp community</a>`
         : `<p class="muted small">Our team will add you to the community using your mobile number +91 ${esc(u.mobile)}.</p>`;
 
-      const text = `Hi OTT, I want to join the monthly membership.\nName: ${u.name}\nEmail: ${u.email}\nMobile: ${u.mobile}`;
-      $("requestBtn").href = `https://wa.me/${SITE.ownerWhatsApp}?text=${encodeURIComponent(text)}`;
+      $("plansBox").innerHTML = plansHtml(u);
 
       const fv = ytEmbed(pub.freeVideoUrl);
       if (fv) {
@@ -245,6 +266,56 @@
         $("freeVideoCard").hidden = false;
       }
     }
+  }
+
+  // ---------- Membership plans (from OTT Membership 2026) ----------
+  const FEATURES = [
+    ["Morning Pre-Market Video", 1], ["Triangle Range Based Analysis", 1], ["Weekly Futures Chart", 1],
+    ["Meeting Point Indicator", 1], ["Triangle Levels Access", 1],
+    ["Triangle Levels Calculation", 2], ["Triangle Range Concept", 2], ["Triangle Edge Level", 2],
+    ["Wide Levels", 2], ["Triangle Levels Case Study", 2], ["Monthly 2 Times Case Study", 2]
+  ];
+  const PLAN_PERKS = {
+    basic: ["Daily Morning Pre-Market Analysis Video", "Triangle Pattern Range Concept Based Analysis",
+            "TradingView access: Weekly Futures Chart, Meeting Point Indicator, Triangle Levels"],
+    triangle: ["Everything in Level 1 (Basic)", "Triangle Levels Calculation", "Triangle Range Concept",
+               "Triangle Edge Level", "Wide Levels",
+               "Exclusive: Triangle Level Case Study — monthly 2 times market case study & experience sharing"]
+  };
+  const TERMS = [
+    "இது வழக்கமான Training Class அல்ல. Market Experience Sharing மட்டுமே.",
+    "நேரடி அல்லது மறைமுக BUY / SELL RECOMMENDATIONS வழங்கப்படாது.",
+    "CHART PATTERNS கற்றுத்தரப்பட மாட்டாது.",
+    "Guaranteed Profit அல்லது Trading Calls கிடையாது.",
+    "உறுப்பினர்கள் தங்களுடைய சொந்த முடிவுகளுக்கும் Trading Risk-க்கும் பொறுப்பானவர்கள்.",
+    "REFUND POLICY: Membership தொடங்கிய பிறகு செலுத்திய கட்டணம் எக்காரணம் கொண்டும் திரும்ப வழங்கப்படாது.",
+    "TradingView Access – Membership Active ஆக இருக்கும் காலத்திற்கு மட்டுமே.",
+    "Morning Pre-Market Video – மாதத்திற்கு குறைந்தபட்சம் 15 TRADING DAYS வழங்கப்படும்.",
+    "நிர்வாகம் ஏற்படுத்தும் மாற்றங்களுக்கு உட்பட விருப்பம் உள்ளவர்கள் மட்டுமே Membership-ல் இணைய வேண்டும்."
+  ];
+  function requestLink(u, P, upgrade) {
+    const text = `Hi OTT, I want to ${upgrade ? "upgrade to" : "join"} the ${P.name.toUpperCase()} membership (Level ${P.level} – ${rupees(P.price)}/month).\nName: ${u.name}\nEmail: ${u.email}\nMobile: ${u.mobile}`;
+    return `https://wa.me/${SITE.ownerWhatsApp}?text=${encodeURIComponent(text)}`;
+  }
+  // only: "triangle" → just the upgrade offer for Basic members
+  function plansHtml(u, only) {
+    const keys = only ? [only] : ["basic", "triangle"];
+    const cards = keys.map(k => { const P = PLANS[k]; return `
+      <div class="plan ${k === "triangle" ? "hi" : ""}">
+        <h3>${P.icon} Level ${P.level} – ${P.name.toUpperCase()}</h3>
+        <div class="price">${rupees(P.price)} <small>/ month</small></div>
+        <ul class="list perks">${PLAN_PERKS[k].map(x => `<li>${esc(x)}</li>`).join("")}</ul>
+        <a class="btn ${k === "triangle" ? "primary" : "wa"}" href="${esc(requestLink(u, P, !!only))}" target="_blank" rel="noopener">${only ? "Request upgrade" : "Join " + P.name} on WhatsApp</a>
+      </div>`; }).join("");
+    const table = only ? "" : `
+      <div class="table-wrap"><table class="cmp">
+        <thead><tr><th>Features</th><th>Basic</th><th>Triangle</th></tr></thead>
+        <tbody>${FEATURES.map(([f, lv]) => `<tr><td>${esc(f)}</td><td>${lv === 1 ? "✅" : "❌"}</td><td>✅</td></tr>`).join("")}</tbody>
+      </table></div>`;
+    return `<div class="plans">${cards}</div>${table}
+      <p class="muted small" style="margin-top:10px">Membership is activated by the OTT team after you message us on WhatsApp. 📌 Case study is given only from the Triangle concept view.</p>
+      <details class="terms"><summary>⚠️ Important – Terms &amp; Conditions</summary><ul>${TERMS.map(t => `<li>${esc(t)}</li>`).join("")}</ul></details>
+      <p class="no-calls">NO BUY / SELL RECOMMENDATIONS · NO CHART PATTERNS · NO TRADING CALLS</p>`;
   }
 
   // Triangle levels (written daily by the auto-fetch job)
@@ -288,7 +359,10 @@
     });
   }
 
-  async function renderMember() {
+  async function renderMember(u) {
+    if (planOf(u) === "triangle") renderCaseStudy();
+    else { $("upgradeBox").innerHTML = plansHtml(u, "triangle"); $("upgradeCard").hidden = false; }
+
     let m = {};
     try { const s = await getDoc(doc(db, "settings", "members")); if (s.exists()) m = s.data(); } catch {}
 
@@ -324,6 +398,20 @@
         return `<div class="hint"><time>${esc(t)}</time>${esc(h.text)}</div>`;
       }).join("");
     }, () => { $("hints").innerHTML = `<p class="muted">Could not load hints. Refresh the page.</p>`; });
+  }
+
+  async function renderCaseStudy() {
+    $("caseCard").hidden = false;
+    let c = {};
+    try { const s = await getDoc(doc(db, "settings", "triangle")); if (s.exists()) c = s.data(); } catch {}
+    const parts = [];
+    if (c.caseTitle || c.caseWhen) parts.push(`<p><b>${esc(c.caseTitle || "Next case study")}</b>${c.caseWhen ? ` · ${esc(c.caseWhen)}` : ""}</p>`);
+    if (c.caseNote) parts.push(`<p class="muted small">${esc(c.caseNote)}</p>`);
+    const join = safeUrl(c.caseJoinUrl);
+    if (join) parts.push(`<div class="actions"><a class="btn primary" href="${esc(join)}" target="_blank" rel="noopener">Join case study session</a></div>`);
+    const rec = ytEmbed(c.caseVideoUrl);
+    if (rec) parts.push(`<p class="small muted" style="margin-top:12px">Last case study recording</p><div class="video"><iframe src="${esc(rec)}" allowfullscreen loading="lazy" title="Case study"></iframe></div>`);
+    $("caseBox").innerHTML = parts.join("") || `<p class="muted">The next case study date will be posted here.</p>`;
   }
 </script>
 </body>

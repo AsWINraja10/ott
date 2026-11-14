@@ -36,6 +36,8 @@
     <div class="stats">
       <div class="stat"><span class="muted small">Total users</span><b id="sTotal">0</b></div>
       <div class="stat"><span class="muted small">Active members</span><b id="sActive">0</b></div>
+      <div class="stat"><span class="muted small">🟢 Basic ₹2,500</span><b id="sBasic">0</b></div>
+      <div class="stat"><span class="muted small">🔵 Triangle ₹5,000</span><b id="sTri">0</b></div>
       <div class="stat"><span class="muted small">Expiring in 5 days</span><b id="sExpiring">0</b></div>
       <div class="stat"><span class="muted small">Not yet in community</span><b id="sCommunity">0</b></div>
     </div>
@@ -48,6 +50,8 @@
         <select id="filter">
           <option value="all">All users</option>
           <option value="active">Active members</option>
+          <option value="basic">🟢 Basic members</option>
+          <option value="triangle">🔵 Triangle members</option>
           <option value="expiring">Expiring in 5 days</option>
           <option value="expired">Expired members</option>
           <option value="free">Free (never member)</option>
@@ -142,8 +146,42 @@
             </label>
           </div>
         </div>
+        <p class="small muted">Shown to both plans (Basic &amp; Triangle).</p>
         <button class="btn primary">Save member content</button>
         <p id="mMsg" class="msg"></p>
+      </form>
+    </section>
+
+    <!-- ===== TRIANGLE PLAN CONTENT ===== -->
+    <h2 class="section-title">🔵 Triangle plan — case study</h2>
+    <section class="card">
+      <form id="triForm">
+        <p class="small muted">Only Triangle (₹5,000) members see this. Monthly 2 times case study &amp; experience sharing.</p>
+        <div class="grid">
+          <div>
+            <label>Case study title
+              <input id="cTitle" placeholder="Triangle edge level behaviour — Nov case study">
+            </label>
+            <label>Date &amp; time
+              <input id="cWhen" placeholder="Sat 22 Nov, 7:30 pm">
+            </label>
+          </div>
+          <div>
+            <label>Session join link (Google Meet / Zoom)
+              <input id="cJoin" placeholder="https://meet.google.com/...">
+            </label>
+            <label>Recording YouTube link (unlisted, optional)
+              <input id="cVideo" placeholder="https://youtu.be/...">
+            </label>
+          </div>
+          <div>
+            <label>Note (optional)
+              <input id="cNote" maxlength="300" placeholder="Bring your marked triangle levels for the week">
+            </label>
+          </div>
+        </div>
+        <button class="btn primary">Save case study</button>
+        <p id="cMsg" class="msg"></p>
       </form>
     </section>
 
@@ -178,7 +216,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script type="module">
-  import { auth, db, SITE, esc, fmtDate, fmtDateTime, memberUntil, isActiveMember, daysLeft } from "./firebase-config.js";
+  import { auth, db, SITE, PLANS, planOf, rupees, esc, fmtDate, fmtDateTime, memberUntil, isActiveMember, daysLeft } from "./firebase-config.js";
   import { parseCsv, computeLevels, basicLevels } from "./triangle-calc.js";
   import { renderTriangle, TRIANGLE_CSS, fmtIsoDate } from "./triangle-view.js";
   import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -227,6 +265,8 @@
 
     $("sTotal").textContent = users.length;
     $("sActive").textContent = users.filter(isActiveMember).length;
+    $("sBasic").textContent = users.filter(u => isActiveMember(u) && planOf(u) === "basic").length;
+    $("sTri").textContent = users.filter(u => isActiveMember(u) && planOf(u) === "triangle").length;
     $("sExpiring").textContent = users.filter(u => status(u) === "expiring").length;
     $("sCommunity").textContent = users.filter(u => !u.communityAdded).length;
 
@@ -234,6 +274,7 @@
       if (q && !`${u.name} ${u.email} ${u.mobile}`.toLowerCase().includes(q)) return false;
       const s = status(u);
       if (f === "active") return s === "active" || s === "expiring";
+      if (f === "basic" || f === "triangle") return (s === "active" || s === "expiring") && planOf(u) === f;
       if (f === "expiring") return s === "expiring";
       if (f === "expired") return s === "expired";
       if (f === "free") return s === "free";
@@ -252,20 +293,27 @@
         expired: `<span class="badge bad">Expired</span><br><span class="small muted">on ${fmtDate(until)}</span>`,
         free: `<span class="badge plain">Free</span>`
       }[s];
+      const P = PLANS[planOf(u)];
+      const planTag = s === "free" ? "" : `<br><span class="small"><b>${P.icon} ${P.name}</b> · ${rupees(P.price)}/mo</span>`;
       const wa = `https://wa.me/91${encodeURIComponent(u.mobile || "")}`;
       const isMem = s === "active" || s === "expiring";
       return `<tr data-id="${esc(u.id)}">
         <td data-l="Name"><b>${esc(u.name)}</b></td>
         <td data-l="Contact">${esc(u.email)}<br><a href="${wa}" target="_blank" rel="noopener">+91 ${esc(u.mobile)}</a></td>
         <td data-l="Joined">${joined}</td>
-        <td data-l="Membership">${badge}</td>
+        <td data-l="Membership">${badge}${planTag}</td>
         <td data-l="Community"><label class="check" style="margin:0"><input type="checkbox" data-act="community" ${u.communityAdded ? "checked" : ""}> <span class="small">Added${u.wantsCommunity === false ? " (opted out)" : ""}</span></label></td>
         <td data-l="Actions"><div class="row-actions">
+          <select data-role="plan" aria-label="Plan">
+            <option value="basic" ${s !== "free" && planOf(u) === "basic" ? "selected" : ""}>🟢 Basic ₹2,500</option>
+            <option value="triangle" ${s === "free" || planOf(u) === "triangle" ? "selected" : ""}>🔵 Triangle ₹5,000</option>
+          </select>
           <select data-role="months" aria-label="Months">
             <option value="1">1 month</option><option value="2">2 months</option>
             <option value="3">3 months</option><option value="6">6 months</option><option value="12">12 months</option>
           </select>
           <button class="btn sm primary" data-act="activate">${isMem ? "Extend" : "Activate"}</button>
+          ${isMem ? `<button class="btn sm" data-act="plan" title="Switch Basic ⇄ Triangle without changing the end date">Change plan</button>` : ""}
           ${isMem || s === "expired" ? `<button class="btn sm danger" data-act="deactivate" title="Ends membership now; the user stays as a free user">Remove membership</button>` : ""}
           ${u.id !== meUid ? `<button class="btn sm danger" data-act="delete" title="Removes this user and their details from the list">🗑 Delete user</button>` : ""}
         </div></td>
@@ -286,21 +334,35 @@
 
     if (btn.dataset.act === "activate") {
       const months = Number(tr.querySelector('[data-role="months"]').value);
+      const plan = tr.querySelector('[data-role="plan"]').value, P = PLANS[plan];
       const days = months * SITE.membershipDays;
       // Extend from the current end date if still active, otherwise from now
       const base = isActiveMember(u) ? memberUntil(u) : new Date();
       const end = new Date(base.getTime() + days * 86400000);
       end.setHours(23, 59, 59, 0);
-      if (!confirm(`${isActiveMember(u) ? "Extend" : "Activate"} membership for ${u.name}\n+91 ${u.mobile}\n\nNew end date: ${fmtDate(end)}`)) return;
+      if (!confirm(`${isActiveMember(u) ? "Extend" : "Activate"} membership for ${u.name}\n+91 ${u.mobile}\n\nPlan: ${P.name} (${rupees(P.price)}/month × ${months} = ${rupees(P.price * months)})\nNew end date: ${fmtDate(end)}`)) return;
       btn.disabled = true;
       try {
-        const patch = { memberUntil: Timestamp.fromDate(end), lastActivatedAt: serverTimestamp(), lastActivatedDays: days };
+        const patch = { memberUntil: Timestamp.fromDate(end), plan, lastActivatedAt: serverTimestamp(), lastActivatedDays: days };
         if (!isActiveMember(u)) patch.memberSince = serverTimestamp();
         await updateDoc(doc(db, "users", id), patch);
-        Object.assign(u, { memberUntil: Timestamp.fromDate(end) });
+        Object.assign(u, { memberUntil: Timestamp.fromDate(end), plan });
         renderUsers();
-        flash($("uMsg"), `Membership for ${u.name} active until ${fmtDate(end)}.`);
+        flash($("uMsg"), `${P.name} membership for ${u.name} active until ${fmtDate(end)}.`);
       } catch (err) { btn.disabled = false; flash($("uMsg"), "Failed: " + err.message, "err"); }
+    }
+
+    if (btn.dataset.act === "plan") {
+      const plan = tr.querySelector('[data-role="plan"]').value, P = PLANS[plan];
+      if (plan === planOf(u)) return flash($("uMsg"), `${u.name} is already on ${P.name}. Pick the other plan in the list first.`, "err");
+      if (!confirm(`Change ${u.name} to ${P.name} (${rupees(P.price)}/month)?\nEnd date stays ${fmtDate(memberUntil(u))}.`)) return;
+      try {
+        await updateDoc(doc(db, "users", id), { plan });
+        u.plan = plan;
+        renderUsers();
+        flash($("uMsg"), `${u.name} is now on the ${P.name} plan.`);
+      } catch (err) { flash($("uMsg"), "Failed: " + err.message, "err"); }
+      return;
     }
 
     if (btn.dataset.act === "delete") {
@@ -337,15 +399,16 @@
 
   // CSV export (filtered view) — for adding contacts to the WhatsApp community
   $("exportBtn").onclick = () => {
-    const rows = [["Name", "Mobile", "Email", "Status", "Member until", "Joined", "In community"]];
+    const rows = [["Name", "Mobile", "Email", "Status", "Plan", "Member until", "Joined", "In community"]];
     const q = $("search").value.trim().toLowerCase(), f = $("filter").value;
     users.forEach(u => {
       const s = status(u);
       if (q && !`${u.name} ${u.email} ${u.mobile}`.toLowerCase().includes(q)) return;
       if (f === "active" && !(s === "active" || s === "expiring")) return;
+      if ((f === "basic" || f === "triangle") && !((s === "active" || s === "expiring") && planOf(u) === f)) return;
       if (["expiring", "expired", "free"].includes(f) && s !== f) return;
       if (f === "community" && u.communityAdded) return;
-      rows.push([u.name, "+91" + (u.mobile || ""), u.email, s,
+      rows.push([u.name, "+91" + (u.mobile || ""), u.email, s, s === "free" ? "" : PLANS[planOf(u)].name,
         memberUntil(u) ? fmtDate(memberUntil(u)) : "",
         u.createdAt && u.createdAt.toDate ? fmtDate(u.createdAt.toDate()) : "",
         u.communityAdded ? "Yes" : "No"]);
@@ -470,6 +533,9 @@
       $("mWeekly").value = m.weeklyChartUrl || "";
       $("mGroup").value = m.memberGroupLink || "";
       $("mNote").value = m.indicatorNote || "";
+      const c = (await getDoc(doc(db, "settings", "triangle"))).data() || {};
+      $("cTitle").value = c.caseTitle || ""; $("cWhen").value = c.caseWhen || "";
+      $("cJoin").value = c.caseJoinUrl || ""; $("cVideo").value = c.caseVideoUrl || ""; $("cNote").value = c.caseNote || "";
       const p = (await getDoc(doc(db, "settings", "public"))).data() || {};
       $("pCommunity").value = p.communityLink || "";
       $("pNotice").value = p.notice || "";
@@ -496,6 +562,18 @@
       await setDoc(doc(db, "settings", "members"), data, { merge: true });
       flash($("mMsg"), "Member content saved.");
     } catch (err) { flash($("mMsg"), "Failed: " + err.message, "err"); }
+  });
+
+  $("triForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    try {
+      await setDoc(doc(db, "settings", "triangle"), {
+        caseTitle: $("cTitle").value.trim(), caseWhen: $("cWhen").value.trim(),
+        caseJoinUrl: $("cJoin").value.trim(), caseVideoUrl: $("cVideo").value.trim(),
+        caseNote: $("cNote").value.trim(), updatedAt: serverTimestamp()
+      }, { merge: true });
+      flash($("cMsg"), "Case study saved. Triangle members see it now.");
+    } catch (err) { flash($("cMsg"), "Failed: " + err.message, "err"); }
   });
 
   $("publicForm").addEventListener("submit", async e => {

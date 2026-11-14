@@ -1,0 +1,99 @@
+rules_version = '2';
+// Option Tricky Trade — Firestore security rules
+// Paste into: Firebase console → Firestore Database → Rules → Publish
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+
+    // Admins = documents in the "admins" collection whose ID is the admin's user UID
+    function isAdmin() {
+      return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Member = memberUntil date is in the future
+    function isMember() {
+      let u = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return signedIn() && u.get('memberUntil', null) is timestamp && u.memberUntil > request.time;
+    }
+
+    // Plan: "basic" (₹2,500) or "triangle" (₹5,000). No plan field = triangle (older members).
+    function isTriangleMember() {
+      let u = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return isMember() && u.get('plan', 'triangle') == 'triangle';
+    }
+
+    // ---------- users ----------
+    match /users/{uid} {
+      allow get: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin();
+
+      // A user can create ONLY their own profile, and can never make themselves a member
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name','mobile','email','wantsCommunity','communityAdded','memberUntil','createdAt'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 60
+        && request.resource.data.mobile is string && request.resource.data.mobile.matches('^[6-9][0-9]{9}$')
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.memberUntil == null
+        && request.resource.data.communityAdded == false
+        && request.resource.data.createdAt == request.time;
+
+      // Users may edit only their name/mobile. Admins can edit anything (activate / extend / deactivate).
+      allow update: if isAdmin() || (
+        signedIn() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','mobile'])
+        && request.resource.data.mobile.matches('^[6-9][0-9]{9}$')
+      );
+      allow delete: if isAdmin();
+    }
+
+    // ---------- admins (managed only from the Firebase console) ----------
+    match /admins/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // ---------- content ----------
+    match /settings/public {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+    match /settings/members {
+      allow read: if isAdmin() || isMember();
+      allow write: if isAdmin();
+    }
+    match /settings/triangle {
+      allow read: if isAdmin() || isTriangleMember();
+      allow write: if isAdmin();
+    }
+    match /hints/{id} {
+      allow read: if isAdmin() || isMember();
+      allow write: if isAdmin();
+    }
+    // Triangle levels
+    //   levels/public = triangle only, for every logged-in user
+    //   levels/latest (and history) = full levels incl. PDH/PDL, HL BEP, ladder, wide calc: Triangle plan & admins
+    match /levels/public {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+    match /levels/{id} {
+      allow read: if isAdmin() || isTriangleMember();
+      allow write: if isAdmin();
+    }
+
+    // Phone alert tokens (one per installed phone). A user may only register / remove their own.
+    match /pushTokens/{token} {
+      allow read: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create, update: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'platform', 'updatedAt']);
+      allow delete: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+    }
+
+    // Everything else is closed
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
